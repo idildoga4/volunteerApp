@@ -43,13 +43,13 @@ class _LoginScreenState extends State<LoginScreen> {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Login successful")));
       Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const MainNavScreen()), (_) => false);
     } else {
-      setState(() => _error = 'Invalid email or password. Try emre@test.com / 1234');
+      setState(() => _error = 'Invalid email or password. Try emre@test.com / Text!123');
     }
   }
 
   void _fillDemo(String email) {
     _emailCtrl.text = email;
-    _passCtrl.text = '1234';
+    _passCtrl.text = 'Text!123';
   }
 
   @override
@@ -106,7 +106,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           Text('💡', style: TextStyle(fontSize: 14)),
                           SizedBox(width: 6),
                           Text(
-                            'Demo accounts (password: 1234)',
+                            'Demo accounts (password: Text!123)',
                             style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppTheme.warning),
                           ),
                         ],

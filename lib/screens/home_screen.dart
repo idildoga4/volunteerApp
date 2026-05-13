@@ -6,7 +6,10 @@ import '../widgets/shared_widgets.dart';
 import 'task_detail_screen.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  final Set<String> favoriteTasks;
+  final Function(String) onFavoriteToggle;
+
+  const HomeScreen({super.key, required this.favoriteTasks, required this.onFavoriteToggle});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -17,7 +20,6 @@ class _HomeScreenState extends State<HomeScreen> {
   final _searchCtrl = TextEditingController();
   String _selectedCategory = 'All';
   String _searchQuery = '';
-  Set<String> _favoriteTasks = {};
 
   @override
   void dispose() {
@@ -200,15 +202,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       delegate: SliverChildBuilderDelegate(
                         (_, i) => TaskCard(
                           task: tasks[i],
-                          isFavorite: _favoriteTasks.contains(tasks[i].id),
+                          isFavorite: widget.favoriteTasks.contains(tasks[i].id),
                           onFavoriteToggle: () {
-                            setState(() {
-                              if (_favoriteTasks.contains(tasks[i].id)) {
-                                _favoriteTasks.remove(tasks[i].id);
-                              } else {
-                                _favoriteTasks.add(tasks[i].id);
-                              }
-                            });
+                            widget.onFavoriteToggle(tasks[i].id);
                           },
                           onTap: () => Navigator.push(
                             context,

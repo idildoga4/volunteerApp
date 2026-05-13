@@ -7,7 +7,7 @@ import '../models/models.dart';
 import 'home_screen.dart';
 import 'my_applications_screen.dart';
 import 'ngo_dashboard_screen.dart';
-
+import 'favorites_screen.dart';
 
 class MainNavScreen extends StatefulWidget {
   final int initialIndex;
@@ -21,6 +21,8 @@ class _MainNavScreenState extends State<MainNavScreen> {
   late int _currentIndex;
   final db = DatabaseService();
 
+  Set<String> favoriteTasks = {};
+
   @override
   void initState() {
     super.initState();
@@ -31,13 +33,37 @@ class _MainNavScreenState extends State<MainNavScreen> {
     final user = db.currentUser;
     if (user?.role == UserRole.organization) {
       return [
-        const HomeScreen(),
+        HomeScreen(
+          favoriteTasks: favoriteTasks,
+          onFavoriteToggle: (taskId) {
+            setState(() {
+              if (favoriteTasks.contains(taskId)) {
+                favoriteTasks.remove(taskId);
+              } else {
+                favoriteTasks.add(taskId);
+              }
+            });
+          },
+        ),
         const NgoDashboardScreen(),
         const ProfileScreen(),
       ];
     }
     return [
-      const HomeScreen(),
+      HomeScreen(
+        favoriteTasks: favoriteTasks,
+        onFavoriteToggle: (taskId) {
+          setState(() {
+            if (favoriteTasks.contains(taskId)) {
+              favoriteTasks.remove(taskId);
+            } else {
+              favoriteTasks.add(taskId);
+            }
+          });
+        },
+      ),
+
+      FavoritesScreen(favoriteTasks: db.getTasks().where((task) => favoriteTasks.contains(task.id)).toList()),
       const MyApplicationsScreen(),
       const ProfileScreen(),
     ];
@@ -54,6 +80,7 @@ class _MainNavScreenState extends State<MainNavScreen> {
     }
     return const [
       BottomNavigationBarItem(icon: Icon(Icons.explore_outlined), activeIcon: Icon(Icons.explore), label: 'Browse'),
+      BottomNavigationBarItem(icon: Icon(Icons.favorite_border), activeIcon: Icon(Icons.favorite), label: 'Favorites'),
       BottomNavigationBarItem(icon: Icon(Icons.assignment_outlined), activeIcon: Icon(Icons.assignment), label: 'Applications'),
       BottomNavigationBarItem(icon: Icon(Icons.person_outline), activeIcon: Icon(Icons.person), label: 'Profile'),
     ];
@@ -62,10 +89,7 @@ class _MainNavScreenState extends State<MainNavScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(
-        index: _currentIndex,
-        children: _screens,
-      ),
+      body: IndexedStack(index: _currentIndex, children: _screens),
       bottomNavigationBar: Container(
         decoration: const BoxDecoration(
           border: Border(top: BorderSide(color: AppTheme.divider)),
