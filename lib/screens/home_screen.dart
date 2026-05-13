@@ -6,7 +6,10 @@ import '../widgets/shared_widgets.dart';
 import 'task_detail_screen.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  final Set<String> favoriteTasks;
+  final Function(String) onFavoriteToggle;
+
+  const HomeScreen({super.key, required this.favoriteTasks, required this.onFavoriteToggle});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -27,11 +30,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final user = db.currentUser;
-    final tasks = db.getTasks(
-      search: _searchQuery,
-      category: _selectedCategory,
-      onlyOpen: false,
-    );
+    final tasks = db.getTasks(search: _searchQuery, category: _selectedCategory, onlyOpen: false);
 
     return Scaffold(
       backgroundColor: AppTheme.surface,
@@ -54,27 +53,20 @@ class _HomeScreenState extends State<HomeScreen> {
                           children: [
                             Text(
                               'Hello, ${user?.name.split(' ').first ?? 'there'} 👋',
-                              style: const TextStyle(
-                                fontSize: 22, fontWeight: FontWeight.w800,
-                                color: AppTheme.textPrimary, letterSpacing: -0.3,
-                              ),
+                              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: AppTheme.textPrimary, letterSpacing: -0.3),
                             ),
                             const SizedBox(height: 2),
-                            const Text('Find your next volunteer opportunity',
-                                style: TextStyle(fontSize: 13, color: AppTheme.textSecondary)),
+                            const Text('Find your next volunteer opportunity', style: TextStyle(fontSize: 13, color: AppTheme.textSecondary)),
                           ],
                         ),
                         Container(
-                          width: 44, height: 44,
-                          decoration: BoxDecoration(
-                            color: AppTheme.primaryLight,
-                            shape: BoxShape.circle,
-                          ),
+                          width: 44,
+                          height: 44,
+                          decoration: BoxDecoration(color: AppTheme.primaryLight, shape: BoxShape.circle),
                           child: Center(
                             child: Text(
                               (user?.name.isNotEmpty == true) ? user!.name[0].toUpperCase() : '?',
-                              style: const TextStyle(
-                                  fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.primary),
+                              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.primary),
                             ),
                           ),
                         ),
@@ -130,19 +122,16 @@ class _HomeScreenState extends State<HomeScreen> {
                               decoration: BoxDecoration(
                                 color: sel ? AppTheme.primary : Colors.white,
                                 borderRadius: BorderRadius.circular(20),
-                                border: Border.all(
-                                    color: sel ? AppTheme.primary : AppTheme.divider),
+                                border: Border.all(color: sel ? AppTheme.primary : AppTheme.divider),
                               ),
                               child: Row(
                                 children: [
                                   Text(emoji, style: const TextStyle(fontSize: 13)),
                                   const SizedBox(width: 6),
-                                  Text(cat,
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w600,
-                                        color: sel ? Colors.white : AppTheme.textSecondary,
-                                      )),
+                                  Text(
+                                    cat,
+                                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: sel ? Colors.white : AppTheme.textSecondary),
+                                  ),
                                 ],
                               ),
                             ),
@@ -186,9 +175,7 @@ class _HomeScreenState extends State<HomeScreen> {
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
-                child: SectionHeader(
-                  title: tasks.isEmpty ? 'No tasks found' : '${tasks.length} Tasks',
-                ),
+                child: SectionHeader(title: tasks.isEmpty ? 'No tasks found' : '${tasks.length} Tasks'),
               ),
             ),
 
@@ -202,7 +189,10 @@ class _HomeScreenState extends State<HomeScreen> {
                       buttonLabel: 'Clear Filters',
                       onButton: () {
                         _searchCtrl.clear();
-                        setState(() { _searchQuery = ''; _selectedCategory = 'All'; });
+                        setState(() {
+                          _searchQuery = '';
+                          _selectedCategory = 'All';
+                        });
                       },
                     ),
                   )
@@ -212,9 +202,14 @@ class _HomeScreenState extends State<HomeScreen> {
                       delegate: SliverChildBuilderDelegate(
                         (_, i) => TaskCard(
                           task: tasks[i],
-                          onTap: () => Navigator.push(context,
-                              MaterialPageRoute(builder: (_) => TaskDetailScreen(taskId: tasks[i].id)))
-                              .then((_) => setState(() {})),
+                          isFavorite: widget.favoriteTasks.contains(tasks[i].id),
+                          onFavoriteToggle: () {
+                            widget.onFavoriteToggle(tasks[i].id);
+                          },
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => TaskDetailScreen(taskId: tasks[i].id)),
+                          ).then((_) => setState(() {})),
                         ),
                         childCount: tasks.length,
                       ),
@@ -229,12 +224,15 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _statItem(String value, String label) {
     return Column(
       children: [
-        Text(value,
-            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: Colors.white)),
+        Text(
+          value,
+          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: Colors.white),
+        ),
         const SizedBox(height: 2),
-        Text(label,
-            style: TextStyle(fontSize: 11, color: Colors.white.withOpacity(0.75),
-                fontWeight: FontWeight.w500)),
+        Text(
+          label,
+          style: TextStyle(fontSize: 11, color: Colors.white.withOpacity(0.75), fontWeight: FontWeight.w500),
+        ),
       ],
     );
   }

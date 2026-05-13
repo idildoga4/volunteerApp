@@ -7,7 +7,10 @@ class TaskCard extends StatelessWidget {
   final Task task;
   final VoidCallback onTap;
 
-  const TaskCard({super.key, required this.task, required this.onTap});
+  final bool isFavorite;
+  final VoidCallback onFavoriteToggle;
+
+  const TaskCard({super.key, required this.task, required this.onTap, required this.isFavorite, required this.onFavoriteToggle});
 
   @override
   Widget build(BuildContext context) {
@@ -22,13 +25,7 @@ class TaskCard extends StatelessWidget {
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: AppTheme.divider),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.04),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
+          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 8, offset: const Offset(0, 2))],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -50,36 +47,28 @@ class TaskCard extends StatelessWidget {
                       children: [
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                          decoration: BoxDecoration(
-                            color: catColor.withOpacity(0.12),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
+                          decoration: BoxDecoration(color: catColor.withOpacity(0.12), borderRadius: BorderRadius.circular(6)),
                           child: Text(
                             task.category,
-                            style: TextStyle(
-                              color: catColor,
-                              fontSize: 10,
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: 0.5,
-                            ),
+                            style: TextStyle(color: catColor, fontSize: 10, fontWeight: FontWeight.w700, letterSpacing: 0.5),
                           ),
                         ),
                         const SizedBox(height: 4),
                         Text(
                           task.title,
-                          style: const TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w700,
-                            color: AppTheme.textPrimary,
-                          ),
+                          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.textPrimary),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
                       ],
                     ),
                   ),
-                  if (task.status != TaskStatus.open)
-                    StatusBadge(status: task.status),
+                  if (task.status != TaskStatus.open) StatusBadge(status: task.status),
+                  const SizedBox(width: 8),
+                  GestureDetector(
+                    onTap: onFavoriteToggle,
+                    child: Icon(isFavorite ? Icons.favorite : Icons.favorite_border, color: isFavorite ? Colors.red : AppTheme.textLight),
+                  ),
                 ],
               ),
             ),
@@ -93,23 +82,18 @@ class TaskCard extends StatelessWidget {
                     task.description,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      color: AppTheme.textSecondary,
-                      height: 1.5,
-                    ),
+                    style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary, height: 1.5),
                   ),
                   const SizedBox(height: 12),
                   Row(
                     children: [
                       _infoChip(Icons.location_on_outlined, task.location),
                       const SizedBox(width: 8),
-                      _infoChip(Icons.calendar_today_outlined,
-                          DateFormat('MMM d').format(task.date)),
+                      _infoChip(Icons.calendar_today_outlined, DateFormat('MMM d').format(task.date)),
                     ],
                   ),
                   const SizedBox(height: 12),
-                 
+
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -118,21 +102,11 @@ class TaskCard extends StatelessWidget {
                         children: [
                           Text(
                             '${task.volunteersApplied} applied',
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: AppTheme.textSecondary,
-                              fontWeight: FontWeight.w500,
-                            ),
+                            style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary, fontWeight: FontWeight.w500),
                           ),
                           Text(
-                            task.isFull
-                                ? 'Full'
-                                : '$spotsLeft spot${spotsLeft == 1 ? '' : 's'} left',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: task.isFull ? AppTheme.danger : AppTheme.success,
-                              fontWeight: FontWeight.w600,
-                            ),
+                            task.isFull ? 'Full' : '$spotsLeft spot${spotsLeft == 1 ? '' : 's'} left',
+                            style: TextStyle(fontSize: 12, color: task.isFull ? AppTheme.danger : AppTheme.success, fontWeight: FontWeight.w600),
                           ),
                         ],
                       ),
@@ -142,9 +116,7 @@ class TaskCard extends StatelessWidget {
                         child: LinearProgressIndicator(
                           value: task.fillRate.clamp(0.0, 1.0),
                           backgroundColor: AppTheme.divider,
-                          valueColor: AlwaysStoppedAnimation(
-                            task.isFull ? AppTheme.danger : catColor,
-                          ),
+                          valueColor: AlwaysStoppedAnimation(task.isFull ? AppTheme.danger : catColor),
                           minHeight: 6,
                         ),
                       ),
@@ -156,16 +128,9 @@ class TaskCard extends StatelessWidget {
                     children: [
                       Text(
                         task.organizationName,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: AppTheme.primary,
-                          fontWeight: FontWeight.w600,
-                        ),
+                        style: const TextStyle(fontSize: 12, color: AppTheme.primary, fontWeight: FontWeight.w600),
                       ),
-                      Text(
-                        _timeAgo(task.postedAt),
-                        style: const TextStyle(fontSize: 11, color: AppTheme.textLight),
-                      ),
+                      Text(_timeAgo(task.postedAt), style: const TextStyle(fontSize: 11, color: AppTheme.textLight)),
                     ],
                   ),
                 ],
@@ -223,10 +188,7 @@ class StatusBadge extends StatelessWidget {
     }
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.12),
-        borderRadius: BorderRadius.circular(6),
-      ),
+      decoration: BoxDecoration(color: color.withOpacity(0.12), borderRadius: BorderRadius.circular(6)),
       child: Text(
         label,
         style: TextStyle(fontSize: 11, color: color, fontWeight: FontWeight.w700),
@@ -263,10 +225,7 @@ class AppStatusBadge extends StatelessWidget {
     }
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.12),
-        borderRadius: BorderRadius.circular(20),
-      ),
+      decoration: BoxDecoration(color: color.withOpacity(0.12), borderRadius: BorderRadius.circular(20)),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -299,17 +258,11 @@ class SkillChip extends StatelessWidget {
         decoration: BoxDecoration(
           color: selected ? AppTheme.primary : AppTheme.primaryLight,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: selected ? AppTheme.primary : AppTheme.divider,
-          ),
+          border: Border.all(color: selected ? AppTheme.primary : AppTheme.divider),
         ),
         child: Text(
           skill,
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-            color: selected ? Colors.white : AppTheme.primary,
-          ),
+          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: selected ? Colors.white : AppTheme.primary),
         ),
       ),
     );
@@ -330,23 +283,14 @@ class SectionHeader extends StatelessWidget {
       children: [
         Text(
           title,
-          style: const TextStyle(
-            fontSize: 17,
-            fontWeight: FontWeight.w700,
-            color: AppTheme.textPrimary,
-            letterSpacing: -0.2,
-          ),
+          style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.textPrimary, letterSpacing: -0.2),
         ),
         if (action != null)
           GestureDetector(
             onTap: onAction,
             child: Text(
               action!,
-              style: const TextStyle(
-                fontSize: 13,
-                color: AppTheme.primary,
-                fontWeight: FontWeight.w600,
-              ),
+              style: const TextStyle(fontSize: 13, color: AppTheme.primary, fontWeight: FontWeight.w600),
             ),
           ),
       ],
@@ -361,14 +305,7 @@ class EmptyState extends StatelessWidget {
   final String? buttonLabel;
   final VoidCallback? onButton;
 
-  const EmptyState({
-    super.key,
-    required this.emoji,
-    required this.title,
-    required this.subtitle,
-    this.buttonLabel,
-    this.onButton,
-  });
+  const EmptyState({super.key, required this.emoji, required this.title, required this.subtitle, this.buttonLabel, this.onButton});
 
   @override
   Widget build(BuildContext context) {
@@ -383,11 +320,7 @@ class EmptyState extends StatelessWidget {
             Text(
               title,
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-                color: AppTheme.textPrimary,
-              ),
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.textPrimary),
             ),
             const SizedBox(height: 8),
             Text(
@@ -395,10 +328,7 @@ class EmptyState extends StatelessWidget {
               textAlign: TextAlign.center,
               style: const TextStyle(fontSize: 14, color: AppTheme.textSecondary, height: 1.5),
             ),
-            if (buttonLabel != null) ...[
-              const SizedBox(height: 24),
-              ElevatedButton(onPressed: onButton, child: Text(buttonLabel!)),
-            ],
+            if (buttonLabel != null) ...[const SizedBox(height: 24), ElevatedButton(onPressed: onButton, child: Text(buttonLabel!))],
           ],
         ),
       ),
@@ -420,9 +350,7 @@ class LoadingOverlay extends StatelessWidget {
         if (isLoading)
           Container(
             color: Colors.black.withOpacity(0.3),
-            child: const Center(
-              child: CircularProgressIndicator(color: AppTheme.primary),
-            ),
+            child: const Center(child: CircularProgressIndicator(color: AppTheme.primary)),
           ),
       ],
     );
