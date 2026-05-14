@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:volunteer/screens/login_screen.dart';
 import 'package:volunteer/screens/main_nav_screen.dart';
 
+import 'widgets/theme.dart';
 import 'screens/settings_screen.dart';
 import 'screens/splash_screen.dart';
 
@@ -9,27 +10,53 @@ void main() {
   runApp(const VolunteerApp());
 }
 
-class VolunteerApp extends StatelessWidget {
+class VolunteerApp extends StatefulWidget {
   const VolunteerApp({super.key});
+
+  static _VolunteerAppState? of(BuildContext context) {
+    return context.findAncestorStateOfType<_VolunteerAppState>();
+  }
+
+  @override
+  State<VolunteerApp> createState() => _VolunteerAppState();
+}
+
+class _VolunteerAppState extends State<VolunteerApp> {
+  bool isDarkMode = false;
+
+  void toggleTheme(bool value) {
+    setState(() {
+      isDarkMode = value;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Volunteer App',
+
+      themeMode: isDarkMode ? ThemeMode.dark : ThemeMode.light,
+
       theme: ThemeData(
+        brightness: Brightness.light,
+
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal),
+
         useMaterial3: true,
       ),
-      
+
+      darkTheme: AppTheme.darkTheme,
+
       initialRoute: '/',
+
       routes: {
         '/': (context) => const SplashScreen(),
         '/settings': (context) => const SettingsScreen(),
         '/login': (context) => const LoginScreen(),
-         '/home': (context) => const MainNavScreen(),
-         
+        '/home': (context) => const MainNavScreen(),
       },
+
       debugShowCheckedModeBanner: false,
     );
-
-  }  } 
+  }
+}
