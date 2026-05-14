@@ -1,25 +1,242 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+
 import '../models/models.dart';
 
 class DatabaseService {
   static final DatabaseService _instance = DatabaseService._internal();
   factory DatabaseService() => _instance;
-  DatabaseService._internal() {
-    _seedData();
-  }
+  DatabaseService._internal();
+
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   final List<AppUser> _users = [];
   final List<Task> _tasks = [];
   final List<TaskApplication> _applications = [];
+  final Set<String> _favoriteTaskIds = {};
   AppUser? _currentUser;
+  bool _initialized = false;
+  String? _lastAuthError;
 
   AppUser? get currentUser => _currentUser;
+  String? get lastAuthError => _lastAuthError;
+
+  Future<void> init() async {
+    if (_initialized) return;
+    await _loadCurrentUser();
+    if (_currentUser != null) {
+      await _refreshUsers();
+      await _refreshTasks();
+      await _refreshApplications();
+      await _refreshFavorites();
+    }
+    _initialized = true;
+  }
+
+  Future<void> refreshAll() async {
+    await _loadCurrentUser();
+    if (_currentUser != null) {
+      await _refreshUsers();
+      await _refreshTasks();
+      await _refreshApplications();
+      await _refreshFavorites();
+    }
+  }
+
+  Future<void> _loadCurrentUser() async {
+    final fbUser = _auth.currentUser;
+    if (fbUser == null) {
+      _currentUser = null;
+      return;
+    }
+
+    try {
+      final userDoc = await _firestore.collection('users').doc(fbUser.uid).get();
+      if (userDoc.exists) {
+        _currentUser = AppUser.fromMap(id: userDoc.id, data: userDoc.data()!);
+        _upsertUserCache(_currentUser!);
+        return;
+      }
+
+      final fallbackUser = AppUser(
+        id: fbUser.uid,
+        name: fbUser.email?.split('@').first ?? 'User',
+        email: fbUser.email ?? '',
+        password: '',
+        role: UserRole.volunteer,
+        joinedAt: DateTime.now(),
+      );
+      await _firestore.collection('users').doc(fbUser.uid).set(fallbackUser.toMap());
+      _currentUser = fallbackUser;
+      _upsertUserCache(fallbackUser);
+    } on FirebaseException {
+      _currentUser = AppUser(
+        id: fbUser.uid,
+        name: fbUser.email?.split('@').first ?? 'User',
+        email: fbUser.email ?? '',
+        password: '',
+        role: UserRole.volunteer,
+        joinedAt: DateTime.now(),
+      );
+      _upsertUserCache(_currentUser!);
+    }
+  }
+
+  Future<void> _refreshUsers() async {
+    final user = _currentUser;
+    if (user == null) return;
+    try {
+      final doc = await _firestore.collection('users').doc(user.id).get();
+      if (!doc.exists) return;
+      _upsertUserCache(AppUser.fromMap(id: doc.id, data: doc.data()!));
+    } on FirebaseException {
+      return;
+    }
+  }
+
+  Future<void> _refreshTasks() async {
+    try {
+      final snap = await _firestore.collection('tasks').orderBy('postedAt', descending: true).get();
+      _tasks
+        ..clear()
+        ..addAll(snap.docs.map((d) => Task.fromMap(id: d.id, data: d.data())));
+    } on FirebaseException {
+      return;
+    }
+  }
+
+  Future<void> _refreshApplications() async {
+    final user = _currentUser;
+    if (user == null) return;
+
+    try {
+      if (user.role == UserRole.volunteer) {
+        final snap = await _firestore
+            .collection('applications')
+            .where('userId', isEqualTo: user.id)
+            .get();
+        _applications
+          ..clear()
+          ..addAll(snap.docs.map((d) => TaskApplication.fromMap(id: d.id, data: d.data())));
+        return;
+      }
+
+      final taskIds = _tasks
+          .where((t) => t.organizationId == user.id)
+          .map((t) => t.id)
+          .toList();
+      if (taskIds.isEmpty) {
+        final taskSnap = await _firestore
+            .collection('tasks')
+            .where('organizationId', isEqualTo: user.id)
+            .get();
+        _tasks
+          ..clear()
+          ..addAll(taskSnap.docs.map((d) => Task.fromMap(id: d.id, data: d.data())));
+      }
+
+      final apps = <TaskApplication>[];
+      for (final task in _tasks.where((t) => t.organizationId == user.id)) {
+        final snap = await _firestore
+            .collection('applications')
+            .where('taskId', isEqualTo: task.id)
+            .get();
+        apps.addAll(snap.docs.map((d) => TaskApplication.fromMap(id: d.id, data: d.data())));
+      }
+      _applications
+        ..clear()
+        ..addAll(apps);
+
+      final applicantIds = apps.map((a) => a.userId).toSet();
+      await _prefetchUsersByIds(applicantIds);
+    } on FirebaseException {
+      return;
+    }
+  }
+
+  Future<void> _refreshFavorites() async {
+    _favoriteTaskIds.clear();
+    final user = _currentUser;
+    if (user == null) return;
+    try {
+      final snap = await _firestore
+          .collection('users')
+          .doc(user.id)
+          .collection('favorites')
+          .get();
+      _favoriteTaskIds.addAll(snap.docs.map((d) => d.id));
+    } on FirebaseException {
+      return;
+    }
+  }
 
   Future<AppUser?> login(String email, String password) async {
-    await Future.delayed(const Duration(milliseconds: 600));
     try {
-      final user = _users.firstWhere((u) => u.email == email && u.password == password);
-      _currentUser = user;
-      return user;
+      _lastAuthError = null;
+      await _auth.signInWithEmailAndPassword(email: email, password: password);
+      await refreshAll();
+      return _currentUser;
+    } on FirebaseAuthException catch (e) {
+      _lastAuthError = e.code.isNotEmpty ? e.code : e.message;
+      return null;
+    } catch (e) {
+      _lastAuthError = e.toString();
+      return null;
+    }
+  }
+
+  Future<GoogleAuthResult?> signInWithGoogle({
+    UserRole? role,
+    String? orgName,
+    String? orgDescription,
+  }) async {
+    try {
+      final googleUser = await GoogleSignIn().signIn();
+      if (googleUser == null) return null;
+
+      final googleAuth = await googleUser.authentication;
+      final credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      final userCredential = await _auth.signInWithCredential(credential);
+      final isNewUser = userCredential.additionalUserInfo?.isNewUser ?? false;
+      final fbUser = _auth.currentUser;
+      if (fbUser == null) return null;
+
+      final userRef = _firestore.collection('users').doc(fbUser.uid);
+      final userSnap = await userRef.get();
+      if (userSnap.exists) {
+        _currentUser = AppUser.fromMap(id: userSnap.id, data: userSnap.data()!);
+        _upsertUserCache(_currentUser!);
+      } else {
+        final displayName = fbUser.displayName ?? googleUser.displayName;
+        final name = (displayName != null && displayName.trim().isNotEmpty)
+            ? displayName.trim()
+            : (fbUser.email?.split('@').first ?? 'User');
+        final selectedRole = role ?? UserRole.volunteer;
+        final user = AppUser(
+          id: fbUser.uid,
+          name: name,
+          email: fbUser.email ?? googleUser.email,
+          password: '',
+          role: selectedRole,
+          orgName: selectedRole == UserRole.organization ? orgName : null,
+          orgDescription: selectedRole == UserRole.organization ? orgDescription : null,
+          joinedAt: DateTime.now(),
+        );
+        await userRef.set(user.toMap());
+        _currentUser = user;
+        _upsertUserCache(user);
+      }
+
+      await refreshAll();
+      if (_currentUser == null) return null;
+      return GoogleAuthResult(user: _currentUser!, isNewUser: isNewUser);
     } catch (_) {
       return null;
     }
@@ -38,51 +255,70 @@ class DatabaseService {
     String? orgName,
     String? orgDescription,
   }) async {
-    await Future.delayed(const Duration(milliseconds: 600));
-    if (_users.any((u) => u.email == email)) return null;
-    final user = AppUser(
-      id: 'user_${_users.length + 1}',
-      name: name,
-      email: email,
-      password: password,
-      role: role,
-      skills: skills,
-      orgName: orgName,
-      orgDescription: orgDescription,
-      joinedAt: DateTime.now(),
-    );
-    _users.add(user);
-    _currentUser = user;
-    return user;
+    try {
+      final cred = await _auth.createUserWithEmailAndPassword(email: email, password: password);
+      final user = AppUser(
+        id: cred.user!.uid,
+        name: name,
+        email: email,
+        password: '',
+        role: role,
+        skills: skills,
+        orgName: orgName,
+        orgDescription: orgDescription,
+        joinedAt: DateTime.now(),
+      );
+      await _firestore.collection('users').doc(user.id).set(user.toMap());
+      _currentUser = user;
+      _upsertUserCache(user);
+      await _refreshFavorites();
+      return user;
+    } catch (_) {
+      return null;
+    }
   }
 
-  void logout() => _currentUser = null;
+  Future<void> logout() async {
+    await _auth.signOut();
+    _currentUser = null;
+    _users.clear();
+    _tasks.clear();
+    _applications.clear();
+    _favoriteTaskIds.clear();
+  }
 
   Future<bool> updateUser(AppUser updated) async {
-    await Future.delayed(const Duration(milliseconds: 400));
-    final idx = _users.indexWhere((u) => u.id == updated.id);
-    if (idx == -1) return false;
-    
-    _users[idx] = updated;
-    if (_currentUser?.id == updated.id) {
-      _currentUser = updated;
-    }
+    try {
+      await _firestore.collection('users').doc(updated.id).update(updated.toMap());
+      _upsertUserCache(updated);
+      if (_currentUser?.id == updated.id) {
+        _currentUser = updated;
+      }
 
-    if (updated.role == UserRole.organization) {
-      for (int i = 0; i < _tasks.length; i++) {
-        if (_tasks[i].organizationId == updated.id) {
-          _tasks[i] = _tasks[i].copyWith(
-            organizationName: updated.orgName ?? updated.name
-          );
+      if (updated.role == UserRole.organization) {
+        final orgName = updated.orgName ?? updated.name;
+        final query = await _firestore
+            .collection('tasks')
+            .where('organizationId', isEqualTo: updated.id)
+            .get();
+        final batch = _firestore.batch();
+        for (final doc in query.docs) {
+          batch.update(doc.reference, {'organizationName': orgName});
+        }
+        await batch.commit();
+        for (int i = 0; i < _tasks.length; i++) {
+          if (_tasks[i].organizationId == updated.id) {
+            _tasks[i] = _tasks[i].copyWith(organizationName: orgName);
+          }
         }
       }
+      return true;
+    } catch (_) {
+      return false;
     }
-
-    return true;
   }
 
   List<Task> getTasks({String? search, String? category, bool onlyOpen = false}) {
-    
     String toSafeLowerCase(String text) {
       return text.replaceAll('İ', 'i').replaceAll('I', 'ı').toLowerCase();
     }
@@ -90,20 +326,22 @@ class DatabaseService {
     return _tasks.where((t) {
       if (onlyOpen && t.status != TaskStatus.open) return false;
       if (category != null && category != 'All' && t.category != category) return false;
-      
+
       if (search != null && search.trim().isNotEmpty) {
         final q = toSafeLowerCase(search.trim());
         final title = toSafeLowerCase(t.title);
         final desc = toSafeLowerCase(t.description);
         final loc = toSafeLowerCase(t.location);
-        
+
         if (!title.contains(q) && !desc.contains(q) && !loc.contains(q)) return false;
       }
       return true;
     }).toList()..sort((a, b) => b.postedAt.compareTo(a.postedAt));
   }
 
-  List<Task> getTasksByOrg(String orgId) => _tasks.where((t) => t.organizationId == orgId).toList()..sort((a, b) => b.postedAt.compareTo(a.postedAt));
+  List<Task> getTasksByOrg(String orgId) =>
+      _tasks.where((t) => t.organizationId == orgId).toList()
+        ..sort((a, b) => b.postedAt.compareTo(a.postedAt));
 
   Task? getTask(String id) {
     try {
@@ -114,30 +352,50 @@ class DatabaseService {
   }
 
   Future<Task> createTask(Task task) async {
-    await Future.delayed(const Duration(milliseconds: 500));
-    final t = task.copyWith(id: 'task_${_tasks.length + 1}', postedAt: DateTime.now());
-    _tasks.insert(0, t);
-    return t;
+    final doc = _firestore.collection('tasks').doc();
+    final created = task.copyWith(id: doc.id, postedAt: DateTime.now());
+    await doc.set(created.toMap());
+    _tasks.insert(0, created);
+    return created;
   }
 
   Future<bool> updateTask(Task updated) async {
-    await Future.delayed(const Duration(milliseconds: 400));
-    final idx = _tasks.indexWhere((t) => t.id == updated.id);
-    if (idx == -1) return false;
-    _tasks[idx] = updated;
-    return true;
+    try {
+      await _firestore.collection('tasks').doc(updated.id).update(updated.toMap());
+      final idx = _tasks.indexWhere((t) => t.id == updated.id);
+      if (idx != -1) _tasks[idx] = updated;
+      return true;
+    } catch (_) {
+      return false;
+    }
   }
 
   Future<bool> deleteTask(String taskId) async {
-    await Future.delayed(const Duration(milliseconds: 400));
-    _tasks.removeWhere((t) => t.id == taskId);
-    _applications.removeWhere((a) => a.taskId == taskId);
-    return true;
+    try {
+      final batch = _firestore.batch();
+      final taskRef = _firestore.collection('tasks').doc(taskId);
+      batch.delete(taskRef);
+      final apps = await _firestore
+          .collection('applications')
+          .where('taskId', isEqualTo: taskId)
+          .get();
+      for (final doc in apps.docs) {
+        batch.delete(doc.reference);
+      }
+      await batch.commit();
+      _tasks.removeWhere((t) => t.id == taskId);
+      _applications.removeWhere((a) => a.taskId == taskId);
+      return true;
+    } catch (_) {
+      return false;
+    }
   }
 
-  List<TaskApplication> getApplicationsForTask(String taskId) => _applications.where((a) => a.taskId == taskId).toList();
+  List<TaskApplication> getApplicationsForTask(String taskId) =>
+      _applications.where((a) => a.taskId == taskId).toList();
 
-  List<TaskApplication> getApplicationsByUser(String userId) => _applications.where((a) => a.userId == userId).toList();
+  List<TaskApplication> getApplicationsByUser(String userId) =>
+      _applications.where((a) => a.userId == userId).toList();
 
   TaskApplication? getApplicationByUserAndTask(String userId, String taskId) {
     try {
@@ -153,10 +411,17 @@ class DatabaseService {
     required String message,
     required String availability,
   }) async {
-    await Future.delayed(const Duration(milliseconds: 500));
-    if (getApplicationByUserAndTask(userId, taskId) != null) return null;
+    final existing = await _firestore
+        .collection('applications')
+        .where('taskId', isEqualTo: taskId)
+        .where('userId', isEqualTo: userId)
+        .limit(1)
+        .get();
+    if (existing.docs.isNotEmpty) return null;
+
+    final appDoc = _firestore.collection('applications').doc();
     final app = TaskApplication(
-      id: 'app_${_applications.length + 1}',
+      id: appDoc.id,
       taskId: taskId,
       userId: userId,
       message: message,
@@ -164,8 +429,16 @@ class DatabaseService {
       appliedAt: DateTime.now(),
       status: ApplicationStatus.pending,
     );
-    _applications.add(app);
 
+    final taskRef = _firestore.collection('tasks').doc(taskId);
+    await _firestore.runTransaction((tx) async {
+      final taskSnap = await tx.get(taskRef);
+      if (!taskSnap.exists) throw Exception('Task not found');
+      tx.set(appDoc, app.toMap());
+      tx.update(taskRef, {'volunteersApplied': FieldValue.increment(1)});
+    });
+
+    _applications.add(app);
     final taskIndex = _tasks.indexWhere((t) => t.id == taskId);
     if (taskIndex != -1) {
       final task = _tasks[taskIndex];
@@ -175,11 +448,16 @@ class DatabaseService {
   }
 
   Future<bool> updateApplicationStatus(String appId, ApplicationStatus status) async {
-    await Future.delayed(const Duration(milliseconds: 400));
-    final idx = _applications.indexWhere((a) => a.id == appId);
-    if (idx == -1) return false;
-    _applications[idx] = _applications[idx].copyWith(status: status);
-    return true;
+    try {
+      await _firestore.collection('applications').doc(appId).update({'status': status.name});
+      final idx = _applications.indexWhere((a) => a.id == appId);
+      if (idx != -1) {
+        _applications[idx] = _applications[idx].copyWith(status: status);
+      }
+      return true;
+    } catch (_) {
+      return false;
+    }
   }
 
   AppUser? getUserById(String id) {
@@ -190,201 +468,63 @@ class DatabaseService {
     }
   }
 
-  void _seedData() {
-    final ngo1 = AppUser(
-      id: 'org_1',
-      name: 'Ayşe Kaya',
-      email: 'temiz@deniz.org',
-      password: 'Text!123',
-      role: UserRole.organization,
-      orgName: 'Temiz Deniz Derneği',
-      orgDescription: 'We organize coastal and marine clean-up events across Turkey to protect our seas.',
-      joinedAt: DateTime.now().subtract(const Duration(days: 400)),
-    );
-    final ngo2 = AppUser(
-      id: 'org_2',
-      name: 'Mehmet Demir',
-      email: 'patiler@kurtarma.org',
-      password: 'Text!123',
-      role: UserRole.organization,
-      orgName: 'Patiler Kurtarma Derneği',
-      orgDescription: 'Animal rescue and shelter support organization active in Istanbul and Ankara.',
-      joinedAt: DateTime.now().subtract(const Duration(days: 300)),
-    );
-    final ngo3 = AppUser(
-      id: 'org_3',
-      name: 'Fatma Şahin',
-      email: 'cocuk@egitim.org',
-      password: 'Text!123',
-      role: UserRole.organization,
-      orgName: 'Çocuk Eğitim Vakfı',
-      orgDescription: 'Providing free education and tutoring for underprivileged children.',
-      joinedAt: DateTime.now().subtract(const Duration(days: 200)),
-    );
-
-    final vol1 = AppUser(
-      id: 'vol_1',
-      name: 'Emre Yıldız',
-      email: 'emre@test.com',
-      password: 'Text!123',
-      role: UserRole.volunteer,
-      skills: ['Photography', 'Social Media', 'Physical Work'],
-      bio: 'Passionate about environmental causes and outdoor activities.',
-      joinedAt: DateTime.now().subtract(const Duration(days: 150)),
-    );
-    final vol2 = AppUser(
-      id: 'vol_2',
-      name: 'Zeynep Arslan',
-      email: 'zeynep@test.com',
-      password: 'Text!123',
-      role: UserRole.volunteer,
-      skills: ['Teaching', 'Childcare', 'Event Planning'],
-      bio: 'Teacher by profession, volunteer by heart.',
-      joinedAt: DateTime.now().subtract(const Duration(days: 90)),
-    );
-
-    _users.addAll([ngo1, ngo2, ngo3, vol1, vol2]);
-
-    // Tasks
-    _tasks.addAll([
-      Task(
-        id: 'task_1',
-        title: 'Sarıyer Beach Clean-Up',
-        description:
-            'Join us for a morning beach clean-up at Sarıyer coast. We will collect plastic waste and debris along 2km of shoreline. Gloves and bags provided. Great opportunity to meet like-minded people and make a real difference!',
-        organizationId: 'org_1',
-        organizationName: 'Temiz Deniz Derneği',
-        category: 'Environment',
-        location: 'Sarıyer, Istanbul',
-        date: DateTime.now().add(const Duration(days: 7)),
-        duration: '4 hours',
-        volunteersNeeded: 20,
-        volunteersApplied: 8,
-        requiredSkills: ['Physical Work'],
-        status: TaskStatus.open,
-        postedAt: DateTime.now().subtract(const Duration(days: 2)),
-        imageEmoji: '🌊',
-      ),
-      Task(
-        id: 'task_2',
-        title: 'Animal Shelter Assistance',
-        description:
-            'Help us care for rescued dogs and cats at our Istanbul shelter. Activities include feeding, grooming, socializing animals, and assisting with adoption events. Animal lovers welcome — no experience needed, just a big heart!',
-        organizationId: 'org_2',
-        organizationName: 'Patiler Kurtarma Derneği',
-        category: 'Animals',
-        location: 'Kadıköy, Istanbul',
-        date: DateTime.now().add(const Duration(days: 3)),
-        duration: '3 hours',
-        volunteersNeeded: 10,
-        volunteersApplied: 6,
-        requiredSkills: ['Childcare'],
-        status: TaskStatus.open,
-        postedAt: DateTime.now().subtract(const Duration(days: 1)),
-        imageEmoji: '🐾',
-      ),
-      Task(
-        id: 'task_3',
-        title: 'Free Math Tutoring — Middle School',
-        description:
-            'We need volunteer tutors to provide free math lessons to middle school students from low-income families. Sessions are held every Saturday morning for 2 hours. Experience in teaching or education preferred.',
-        organizationId: 'org_3',
-        organizationName: 'Çocuk Eğitim Vakfı',
-        category: 'Education',
-        location: 'Beyoğlu, Istanbul',
-        date: DateTime.now().add(const Duration(days: 5)),
-        duration: '2 hours/week',
-        volunteersNeeded: 8,
-        volunteersApplied: 3,
-        requiredSkills: ['Teaching'],
-        status: TaskStatus.open,
-        postedAt: DateTime.now().subtract(const Duration(days: 3)),
-        imageEmoji: '📚',
-      ),
-      Task(
-        id: 'task_4',
-        title: 'Food Bank Distribution',
-        description:
-            'Assist with sorting and distributing food packages at our weekly food bank. We serve over 200 families each week and need helping hands for packing, organizing, and distribution logistics.',
-        organizationId: 'org_1',
-        organizationName: 'Temiz Deniz Derneği',
-        category: 'Social',
-        location: 'Fatih, Istanbul',
-        date: DateTime.now().add(const Duration(days: 10)),
-        duration: '5 hours',
-        volunteersNeeded: 15,
-        volunteersApplied: 4,
-        requiredSkills: ['Physical Work', 'Event Planning'],
-        status: TaskStatus.open,
-        postedAt: DateTime.now().subtract(const Duration(days: 4)),
-        imageEmoji: '🍱',
-      ),
-      Task(
-        id: 'task_5',
-        title: 'Photography for NGO Event',
-        description:
-            'We are looking for a volunteer photographer to document our annual gala dinner. This is a great opportunity to build your portfolio while supporting a great cause. Professional equipment preferred.',
-        organizationId: 'org_3',
-        organizationName: 'Çocuk Eğitim Vakfı',
-        category: 'Arts & Media',
-        location: 'Şişli, Istanbul',
-        date: DateTime.now().add(const Duration(days: 14)),
-        duration: '6 hours',
-        volunteersNeeded: 2,
-        volunteersApplied: 1,
-        requiredSkills: ['Photography', 'Social Media'],
-        status: TaskStatus.open,
-        postedAt: DateTime.now().subtract(const Duration(days: 5)),
-        imageEmoji: '📸',
-      ),
-      Task(
-        id: 'task_6',
-        title: 'Park Reforestation Day',
-        description:
-            'Help us plant 500 trees at Polonezköy Nature Park. Shovels and saplings provided. Wear comfortable clothes and bring water. Lunch will be served. A great family-friendly activity!',
-        organizationId: 'org_1',
-        organizationName: 'Temiz Deniz Derneği',
-        category: 'Environment',
-        location: 'Beykoz, Istanbul',
-        date: DateTime.now().add(const Duration(days: 21)),
-        duration: '6 hours',
-        volunteersNeeded: 50,
-        volunteersApplied: 22,
-        requiredSkills: ['Physical Work'],
-        status: TaskStatus.open,
-        postedAt: DateTime.now().subtract(const Duration(days: 6)),
-        imageEmoji: '🌳',
-      ),
-      Task(
-        id: 'task_7',
-        title: 'Stray Cat Vaccination Drive',
-        description:
-            'Assist veterinarians during a free vaccination and neutering campaign for stray cats in Üsküdar. Tasks include handling cats, record keeping, and community outreach.',
-        organizationId: 'org_2',
-        organizationName: 'Patiler Kurtarma Derneği',
-        category: 'Animals',
-        location: 'Üsküdar, Istanbul',
-        date: DateTime.now().subtract(const Duration(days: 5)),
-        duration: '8 hours',
-        volunteersNeeded: 12,
-        volunteersApplied: 12,
-        requiredSkills: [],
-        status: TaskStatus.completed,
-        postedAt: DateTime.now().subtract(const Duration(days: 20)),
-        imageEmoji: '🐱',
-      ),
-    ]);
-
-    _applications.add(
-      TaskApplication(
-        id: 'app_seed_1',
-        taskId: 'task_1',
-        userId: 'vol_1',
-        message: 'I am very passionate about keeping our seas clean. I can help!',
-        availability: 'Weekends and mornings',
-        appliedAt: DateTime.now().subtract(const Duration(days: 1)),
-        status: ApplicationStatus.pending,
-      ),
-    );
+  Set<String> getFavoriteTaskIds() {
+    return Set<String>.from(_favoriteTaskIds);
   }
+
+  bool isFavoriteTask(String taskId) {
+    return _favoriteTaskIds.contains(taskId);
+  }
+
+  Future<void> toggleFavoriteTask(String taskId) async {
+    final user = _currentUser;
+    if (user == null) return;
+
+    final ref = _firestore
+        .collection('users')
+        .doc(user.id)
+        .collection('favorites')
+        .doc(taskId);
+
+    if (_favoriteTaskIds.contains(taskId)) {
+      await ref.delete();
+      _favoriteTaskIds.remove(taskId);
+    } else {
+      await ref.set({'createdAt': FieldValue.serverTimestamp()});
+      _favoriteTaskIds.add(taskId);
+    }
+  }
+
+  void _upsertUserCache(AppUser user) {
+    final idx = _users.indexWhere((u) => u.id == user.id);
+    if (idx == -1) {
+      _users.add(user);
+    } else {
+      _users[idx] = user;
+    }
+  }
+
+  Future<void> _prefetchUsersByIds(Set<String> userIds) async {
+    if (userIds.isEmpty) return;
+    final ids = userIds.toList();
+    const chunkSize = 10;
+    for (int i = 0; i < ids.length; i += chunkSize) {
+      final chunk = ids.sublist(i, (i + chunkSize) > ids.length ? ids.length : i + chunkSize);
+      final snap = await _firestore
+          .collection('users')
+          .where(FieldPath.documentId, whereIn: chunk)
+          .get();
+      for (final doc in snap.docs) {
+        _upsertUserCache(AppUser.fromMap(id: doc.id, data: doc.data()));
+      }
+    }
+  }
+
+}
+
+class GoogleAuthResult {
+  final AppUser user;
+  final bool isNewUser;
+
+  const GoogleAuthResult({required this.user, required this.isNewUser});
 }

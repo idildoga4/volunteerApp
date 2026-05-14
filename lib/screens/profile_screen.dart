@@ -365,7 +365,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ),
     );
     if (confirm == true && mounted) {
-      db.logout();
+      await db.logout();
       Navigator.pushAndRemoveUntil(context,
           MaterialPageRoute(builder: (_) => const OnboardingScreen()), (_) => false);
     }

@@ -1,6 +1,36 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 enum UserRole { volunteer, organization }
 enum TaskStatus { open, inProgress, completed, cancelled }
 enum ApplicationStatus { pending, accepted, rejected }
+
+DateTime _asDateTime(dynamic value) {
+  if (value is DateTime) return value;
+  if (value is Timestamp) return value.toDate();
+  if (value is String) return DateTime.tryParse(value) ?? DateTime.now();
+  return DateTime.now();
+}
+
+UserRole _asUserRole(String? value) {
+  return UserRole.values.firstWhere(
+    (role) => role.name == value,
+    orElse: () => UserRole.volunteer,
+  );
+}
+
+TaskStatus _asTaskStatus(String? value) {
+  return TaskStatus.values.firstWhere(
+    (status) => status.name == value,
+    orElse: () => TaskStatus.open,
+  );
+}
+
+ApplicationStatus _asApplicationStatus(String? value) {
+  return ApplicationStatus.values.firstWhere(
+    (status) => status.name == value,
+    orElse: () => ApplicationStatus.pending,
+  );
+}
 
 class AppUser {
   final String id;
@@ -28,6 +58,37 @@ class AppUser {
     this.avatarPath,
     required this.joinedAt,
   });
+
+  Map<String, dynamic> toMap() {
+    return {
+      'name': name,
+      'email': email,
+      'password': password,
+      'role': role.name,
+      'skills': skills,
+      'bio': bio,
+      'orgName': orgName,
+      'orgDescription': orgDescription,
+      'avatarPath': avatarPath,
+      'joinedAt': joinedAt,
+    };
+  }
+
+  factory AppUser.fromMap({required String id, required Map<String, dynamic> data}) {
+    return AppUser(
+      id: id,
+      name: data['name'] ?? '',
+      email: data['email'] ?? '',
+      password: data['password'] ?? '',
+      role: _asUserRole(data['role'] as String?),
+      skills: List<String>.from(data['skills'] ?? const []),
+      bio: data['bio'],
+      orgName: data['orgName'],
+      orgDescription: data['orgDescription'],
+      avatarPath: data['avatarPath'],
+      joinedAt: _asDateTime(data['joinedAt']),
+    );
+  }
 
   AppUser copyWith({
     String? id,
@@ -93,6 +154,45 @@ class Task {
     required this.imageEmoji,
   });
 
+  Map<String, dynamic> toMap() {
+    return {
+      'title': title,
+      'description': description,
+      'organizationId': organizationId,
+      'organizationName': organizationName,
+      'category': category,
+      'location': location,
+      'date': date,
+      'duration': duration,
+      'volunteersNeeded': volunteersNeeded,
+      'volunteersApplied': volunteersApplied,
+      'requiredSkills': requiredSkills,
+      'status': status.name,
+      'postedAt': postedAt,
+      'imageEmoji': imageEmoji,
+    };
+  }
+
+  factory Task.fromMap({required String id, required Map<String, dynamic> data}) {
+    return Task(
+      id: id,
+      title: data['title'] ?? '',
+      description: data['description'] ?? '',
+      organizationId: data['organizationId'] ?? '',
+      organizationName: data['organizationName'] ?? '',
+      category: data['category'] ?? 'Other',
+      location: data['location'] ?? '',
+      date: _asDateTime(data['date']),
+      duration: data['duration'] ?? '',
+      volunteersNeeded: (data['volunteersNeeded'] ?? 0) as int,
+      volunteersApplied: (data['volunteersApplied'] ?? 0) as int,
+      requiredSkills: List<String>.from(data['requiredSkills'] ?? const []),
+      status: _asTaskStatus(data['status'] as String?),
+      postedAt: _asDateTime(data['postedAt']),
+      imageEmoji: data['imageEmoji'] ?? '✨',
+    );
+  }
+
   Task copyWith({
     String? id,
     String? title,
@@ -151,6 +251,29 @@ class TaskApplication {
     required this.appliedAt,
     required this.status,
   });
+
+  Map<String, dynamic> toMap() {
+    return {
+      'taskId': taskId,
+      'userId': userId,
+      'message': message,
+      'availability': availability,
+      'appliedAt': appliedAt,
+      'status': status.name,
+    };
+  }
+
+  factory TaskApplication.fromMap({required String id, required Map<String, dynamic> data}) {
+    return TaskApplication(
+      id: id,
+      taskId: data['taskId'] ?? '',
+      userId: data['userId'] ?? '',
+      message: data['message'] ?? '',
+      availability: data['availability'] ?? '',
+      appliedAt: _asDateTime(data['appliedAt']),
+      status: _asApplicationStatus(data['status'] as String?),
+    );
+  }
 
   TaskApplication copyWith({
     String? id,
