@@ -227,7 +227,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
                     _vDivider(context),
 
-                    _statItem(context, '3', 'NGOs Active'),
+                    _statItem(context, '${db.getActiveNGOCount()}', 'NGOs Active'),
                   ],
                 ),
               ),
@@ -243,16 +243,14 @@ class _HomeScreenState extends State<HomeScreen> {
 
             tasks.isEmpty
                 ? SliverFillRemaining(
+                    hasScrollBody: false, 
                     child: EmptyState(
                       emoji: '🔍',
                       title: 'No Tasks Found',
                       subtitle: 'Try adjusting your search or filters.',
-
                       buttonLabel: 'Clear Filters',
-
                       onButton: () {
                         _searchCtrl.clear();
-
                         setState(() {
                           _searchQuery = '';
                           _selectedCategory = 'All';

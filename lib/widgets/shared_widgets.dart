@@ -377,9 +377,10 @@ class EmptyState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Padding(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.all(40),
         child: Column(
+          mainAxisSize: MainAxisSize.min, 
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(emoji, style: const TextStyle(fontSize: 64)),
@@ -395,7 +396,10 @@ class EmptyState extends StatelessWidget {
               textAlign: TextAlign.center,
               style: const TextStyle(fontSize: 14, color: AppTheme.textSecondary, height: 1.5),
             ),
-            if (buttonLabel != null) ...[const SizedBox(height: 24), ElevatedButton(onPressed: onButton, child: Text(buttonLabel!))],
+            if (buttonLabel != null) ...[
+              const SizedBox(height: 24), 
+              ElevatedButton(onPressed: onButton, child: Text(buttonLabel!))
+            ],
           ],
         ),
       ),

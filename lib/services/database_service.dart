@@ -25,6 +25,10 @@ class DatabaseService {
     }
   }
 
+  int getActiveNGOCount() {
+    return _users.where((u) => u.role == UserRole.organization).length;
+  }
+
   Future<AppUser?> register({
     required String name,
     required String email,
@@ -58,18 +62,42 @@ class DatabaseService {
     await Future.delayed(const Duration(milliseconds: 400));
     final idx = _users.indexWhere((u) => u.id == updated.id);
     if (idx == -1) return false;
+    
     _users[idx] = updated;
-    _currentUser = updated;
+    if (_currentUser?.id == updated.id) {
+      _currentUser = updated;
+    }
+
+    if (updated.role == UserRole.organization) {
+      for (int i = 0; i < _tasks.length; i++) {
+        if (_tasks[i].organizationId == updated.id) {
+          _tasks[i] = _tasks[i].copyWith(
+            organizationName: updated.orgName ?? updated.name
+          );
+        }
+      }
+    }
+
     return true;
   }
 
   List<Task> getTasks({String? search, String? category, bool onlyOpen = false}) {
+    
+    String toSafeLowerCase(String text) {
+      return text.replaceAll('İ', 'i').replaceAll('I', 'ı').toLowerCase();
+    }
+
     return _tasks.where((t) {
       if (onlyOpen && t.status != TaskStatus.open) return false;
       if (category != null && category != 'All' && t.category != category) return false;
-      if (search != null && search.isNotEmpty) {
-        final q = search.toLowerCase();
-        if (!t.title.toLowerCase().contains(q) && !t.description.toLowerCase().contains(q) && !t.location.toLowerCase().contains(q)) return false;
+      
+      if (search != null && search.trim().isNotEmpty) {
+        final q = toSafeLowerCase(search.trim());
+        final title = toSafeLowerCase(t.title);
+        final desc = toSafeLowerCase(t.description);
+        final loc = toSafeLowerCase(t.location);
+        
+        if (!title.contains(q) && !desc.contains(q) && !loc.contains(q)) return false;
       }
       return true;
     }).toList()..sort((a, b) => b.postedAt.compareTo(a.postedAt));
@@ -137,6 +165,12 @@ class DatabaseService {
       status: ApplicationStatus.pending,
     );
     _applications.add(app);
+
+    final taskIndex = _tasks.indexWhere((t) => t.id == taskId);
+    if (taskIndex != -1) {
+      final task = _tasks[taskIndex];
+      _tasks[taskIndex] = task.copyWith(volunteersApplied: task.volunteersApplied + 1);
+    }
     return app;
   }
 
