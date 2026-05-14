@@ -124,18 +124,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
 
-          const SizedBox(height: 24),
-
-          const Text("More", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
-
-          const SizedBox(height: 12),
-
-          _settingTile(icon: Icons.lock_outline, title: "Privacy & Security"),
-
-          _settingTile(icon: Icons.help_outline, title: "Help & Support"),
-
-          _settingTile(icon: Icons.info_outline, title: "About Application"),
-
           const SizedBox(height: 32),
 
           ElevatedButton.icon(
@@ -157,20 +145,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
         ],
       ),
-    );
-  }
-
-  Widget _settingTile({required IconData icon, required String title}) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-
-      decoration: BoxDecoration(
-        color: Theme.of(context).brightness == Brightness.dark ? AppTheme.darkCard : Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppTheme.divider),
-      ),
-
-      child: ListTile(leading: Icon(icon), title: Text(title), trailing: const Icon(Icons.arrow_forward_ios, size: 16)),
     );
   }
 }
