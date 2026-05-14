@@ -15,121 +15,179 @@ class TaskCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final catColor = AppConstants.categoryColors[task.category] ?? AppTheme.primary;
+
     final spotsLeft = task.volunteersNeeded - task.volunteersApplied;
 
     return GestureDetector(
       onTap: onTap,
+
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
+
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).brightness == Brightness.dark ? AppTheme.darkCard : Colors.white,
+
           borderRadius: BorderRadius.circular(16),
+
           border: Border.all(color: AppTheme.divider),
+
           boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 8, offset: const Offset(0, 2))],
         ),
+
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+
           children: [
-            // Header
+            // HEADER
             Container(
               padding: const EdgeInsets.all(16),
+
               decoration: BoxDecoration(
                 color: catColor.withOpacity(0.06),
+
                 borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
               ),
+
               child: Row(
                 children: [
                   Text(task.imageEmoji, style: const TextStyle(fontSize: 32)),
+
                   const SizedBox(width: 12),
+
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
+
                       children: [
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+
                           decoration: BoxDecoration(color: catColor.withOpacity(0.12), borderRadius: BorderRadius.circular(6)),
+
                           child: Text(
                             task.category,
+
                             style: TextStyle(color: catColor, fontSize: 10, fontWeight: FontWeight.w700, letterSpacing: 0.5),
                           ),
                         ),
+
                         const SizedBox(height: 4),
+
                         Text(
                           task.title,
-                          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.textPrimary),
+
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+
+                            color: Theme.of(context).brightness == Brightness.dark ? Colors.white : AppTheme.textPrimary,
+                          ),
+
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
                       ],
                     ),
                   ),
+
                   if (task.status != TaskStatus.open) StatusBadge(status: task.status),
+
                   const SizedBox(width: 8),
+
                   GestureDetector(
                     onTap: onFavoriteToggle,
+
                     child: Icon(isFavorite ? Icons.favorite : Icons.favorite_border, color: isFavorite ? Colors.red : AppTheme.textLight),
                   ),
                 ],
               ),
             ),
-            // Body
+
+            // BODY
             Padding(
               padding: const EdgeInsets.all(16),
+
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+
                 children: [
                   Text(
                     task.description,
+
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary, height: 1.5),
+
+                    style: TextStyle(
+                      fontSize: 13,
+
+                      color: Theme.of(context).brightness == Brightness.dark ? AppTheme.darkSecondaryText : AppTheme.textSecondary,
+
+                      height: 1.5,
+                    ),
                   ),
+
                   const SizedBox(height: 12),
+
                   Row(
                     children: [
                       _infoChip(Icons.location_on_outlined, task.location),
+
                       const SizedBox(width: 8),
+
                       _infoChip(Icons.calendar_today_outlined, DateFormat('MMM d').format(task.date)),
                     ],
                   ),
+
                   const SizedBox(height: 12),
 
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
+
                     children: [
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+
                         children: [
                           Text(
                             '${task.volunteersApplied} applied',
+
                             style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary, fontWeight: FontWeight.w500),
                           ),
+
                           Text(
                             task.isFull ? 'Full' : '$spotsLeft spot${spotsLeft == 1 ? '' : 's'} left',
+
                             style: TextStyle(fontSize: 12, color: task.isFull ? AppTheme.danger : AppTheme.success, fontWeight: FontWeight.w600),
                           ),
                         ],
                       ),
+
                       const SizedBox(height: 6),
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(4),
-                        child: LinearProgressIndicator(
-                          value: task.fillRate.clamp(0.0, 1.0),
-                          backgroundColor: AppTheme.divider,
-                          valueColor: AlwaysStoppedAnimation(task.isFull ? AppTheme.danger : catColor),
-                          minHeight: 6,
-                        ),
+
+                      LinearProgressIndicator(
+                        value: task.fillRate.clamp(0.0, 1.0),
+
+                        backgroundColor: AppTheme.divider,
+
+                        valueColor: AlwaysStoppedAnimation(task.isFull ? AppTheme.danger : catColor),
+
+                        minHeight: 6,
                       ),
                     ],
                   ),
+
                   const SizedBox(height: 12),
+
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+
                     children: [
                       Text(
                         task.organizationName,
+
                         style: const TextStyle(fontSize: 12, color: AppTheme.primary, fontWeight: FontWeight.w600),
                       ),
+
                       Text(_timeAgo(task.postedAt), style: const TextStyle(fontSize: 11, color: AppTheme.textLight)),
                     ],
                   ),
@@ -146,7 +204,9 @@ class TaskCard extends StatelessWidget {
     return Row(
       children: [
         Icon(icon, size: 13, color: AppTheme.textLight),
+
         const SizedBox(width: 3),
+
         Text(label, style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
       ],
     );
@@ -154,8 +214,15 @@ class TaskCard extends StatelessWidget {
 
   String _timeAgo(DateTime dt) {
     final diff = DateTime.now().difference(dt);
-    if (diff.inDays > 0) return '${diff.inDays}d ago';
-    if (diff.inHours > 0) return '${diff.inHours}h ago';
+
+    if (diff.inDays > 0) {
+      return '${diff.inDays}d ago';
+    }
+
+    if (diff.inHours > 0) {
+      return '${diff.inHours}h ago';
+    }
+
     return 'Just now';
   }
 }
