@@ -34,6 +34,11 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     await Future.delayed(const Duration(milliseconds: 2200));
     if (!mounted) return;
     final db = DatabaseService();
+    try {
+      await db.init();
+    } catch (_) {
+      // Allow navigation to continue if init fails (e.g., permission issues).
+    }
     if (db.currentUser != null) {
       Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const MainNavScreen()));
     } else {

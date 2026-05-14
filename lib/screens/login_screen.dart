@@ -3,6 +3,7 @@ import 'package:volunteer/screens/main_nav_screen.dart';
 import 'package:volunteer/widgets/theme.dart';
 
 import '../../services/database_service.dart';
+import 'profile_completion_screen.dart';
 
 import 'register_screen.dart';
 
@@ -18,6 +19,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailCtrl = TextEditingController();
   final _passCtrl = TextEditingController();
   bool _loading = false;
+  bool _googleLoading = false;
   bool _obscure = true;
   bool _rememberMe = false;
   String? _error;
@@ -43,9 +45,35 @@ class _LoginScreenState extends State<LoginScreen> {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Login successful")));
       Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const MainNavScreen()), (_) => false);
     } else {
-      setState(() => _error = 'Invalid email or password. Try emre@test.com / Text!123');
+      final code = db.lastAuthError;
+      setState(() => _error = code == null ? 'Login failed. Please try again.' : 'Login failed: $code');
     }
   }
+
+  Future<void> _loginWithGoogle() async {
+    setState(() {
+      _googleLoading = true;
+      _error = null;
+    });
+    final db = DatabaseService();
+    final result = await db.signInWithGoogle();
+    if (!mounted) return;
+    setState(() => _googleLoading = false);
+    if (result != null) {
+      if (result.isNewUser) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => ProfileCompletionScreen(user: result.user)),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Login successful")));
+        Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const MainNavScreen()), (_) => false);
+      }
+    } else {
+      setState(() => _error = 'Google sign-in cancelled or failed.');
+    }
+  }
+
 
   void _fillDemo(String email) {
     _emailCtrl.text = email;
@@ -209,6 +237,17 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: _loading
                         ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
                         : const Text('Sign In'),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: _googleLoading ? null : _loginWithGoogle,
+                    icon: _googleLoading
+                        ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                        : Image.asset('assets/Google_logo.png', width: 18, height: 18),
+                    label: Text(_googleLoading ? 'Connecting...' : 'Continue with Google'),
                   ),
                 ),
                 const SizedBox(height: 24),

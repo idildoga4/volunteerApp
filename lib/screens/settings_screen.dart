@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../main.dart';
+import '../services/database_service.dart';
 import '../widgets/theme.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -10,6 +11,7 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
+  final db = DatabaseService();
   bool darkMode = false;
   bool notifications = true;
 
@@ -24,6 +26,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         padding: const EdgeInsets.all(16),
 
         children: [
+          if (db.currentUser != null)
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
@@ -37,20 +40,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 CircleAvatar(
                   radius: 28,
                   backgroundColor: AppTheme.primaryLight,
-                  child: const Icon(Icons.person, color: AppTheme.primary, size: 30),
+                  child: Text(
+                    db.currentUser!.name.isNotEmpty ? db.currentUser!.name[0].toUpperCase() : '?',
+                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.primary),
+                  ),
                 ),
 
                 const SizedBox(width: 16),
 
-                const Expanded(
+                Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text("Volunteer User", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                      Text(db.currentUser!.name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
 
                       SizedBox(height: 4),
 
-                      Text("volunteer@test.com", style: TextStyle(color: AppTheme.textSecondary)),
+                      Text(db.currentUser!.email, style: const TextStyle(color: AppTheme.textSecondary)),
                     ],
                   ),
                 ),
@@ -140,7 +146,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
             ),
 
-            onPressed: () {
+            onPressed: () async {
+              await db.logout();
               Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
             },
 
