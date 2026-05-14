@@ -63,7 +63,9 @@ class _MainNavScreenState extends State<MainNavScreen> {
         },
       ),
 
-      FavoritesScreen(favoriteTasks: db.getTasks().where((task) => favoriteTasks.contains(task.id)).toList()),
+      FavoritesScreen(
+        favoriteTasks: favoriteTasks.map((id) => db.getTask(id)).whereType<Task>().toList()
+        ),
       const MyApplicationsScreen(),
       const ProfileScreen(),
     ];
