@@ -61,7 +61,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                 ),
 
-                Icon(Icons.edit_outlined, color: AppTheme.textLight),
+                
               ],
             ),
           ),

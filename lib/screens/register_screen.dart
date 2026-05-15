@@ -22,6 +22,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _passCtrl = TextEditingController();
   final _orgNameCtrl = TextEditingController();
   final _orgDescCtrl = TextEditingController();
+  final _inviteCodeCtrl = TextEditingController();
 
   UserRole _role = UserRole.volunteer;
   List<String> _selectedSkills = [];
@@ -34,6 +35,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   void dispose() {
     _nameCtrl.dispose(); _emailCtrl.dispose(); _passCtrl.dispose();
     _orgNameCtrl.dispose(); _orgDescCtrl.dispose();
+    _inviteCodeCtrl.dispose();
     super.dispose();
   }
 
@@ -344,7 +346,29 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     padding: EdgeInsets.only(bottom: 40),
                     child: Icon(Icons.description_outlined))),
           ),
-        ],
+          const SizedBox(height: 16),
+          TextFormField(
+            controller: _inviteCodeCtrl,
+            decoration: const InputDecoration(
+                labelText: 'STK Davet Kodu', 
+                hintText: 'Örn: TOG-2026',
+                prefixIcon: Icon(Icons.vpn_key_outlined)),
+            validator: (v) {
+              if (_role == UserRole.organization) {
+                if (v == null || v.trim().isEmpty) {
+                  return 'Davet kodu zorunludur.';
+                }
+                // Geçerli kodların listesi
+                final validCodes = ['TOG-2026', 'CORBA-100', 'IKU-2026'];
+                if (!validCodes.contains(v.trim().toUpperCase())) {
+                  return 'Geçersiz davet kodu. Lütfen platform yönetimiyle iletişime geçin.';
+                }
+              }
+              return null;
+            },
+          ),
+        ], 
+        
         const SizedBox(height: 32),
         SizedBox(
           width: double.infinity,
@@ -356,10 +380,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 : const Text('Create Account'),
           ),
         ),
-      ],
+      ], 
     );
   }
-
   Widget _roleCard(UserRole role, String emoji, String label, String sub) {
     final sel = _role == role;
     return GestureDetector(
