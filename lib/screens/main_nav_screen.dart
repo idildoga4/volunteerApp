@@ -63,7 +63,11 @@ class _MainNavScreenState extends State<MainNavScreen> {
         },
       ),
 
+<<<<<<< Updated upstream
       FavoritesScreen(favoriteTasks: db.getTasks().where((task) => favoriteTasks.contains(task.id)).toList()),
+=======
+      FavoritesScreen(favoriteTasks: favoriteTasks.map((id) => db.getTask(id)).whereType<Task>().toList(), onFavoriteToggle: _toggleFavorite),
+>>>>>>> Stashed changes
       const MyApplicationsScreen(),
       const ProfileScreen(),
     ];
@@ -91,15 +95,17 @@ class _MainNavScreenState extends State<MainNavScreen> {
     return Scaffold(
       body: IndexedStack(index: _currentIndex, children: _screens),
       bottomNavigationBar: Container(
-        decoration: const BoxDecoration(
-          border: Border(top: BorderSide(color: AppTheme.divider)),
+        decoration: BoxDecoration(
+          color: Theme.of(context).brightness == Brightness.dark ? AppTheme.darkCard : Colors.white,
+
+          border: const Border(top: BorderSide(color: AppTheme.divider)),
         ),
         child: BottomNavigationBar(
           currentIndex: _currentIndex,
           onTap: (i) => setState(() => _currentIndex = i),
           selectedItemColor: AppTheme.primary,
-          unselectedItemColor: AppTheme.textLight,
-          backgroundColor: Colors.white,
+          unselectedItemColor: Theme.of(context).brightness == Brightness.dark ? Colors.grey : AppTheme.textLight,
+          backgroundColor: Theme.of(context).brightness == Brightness.dark ? AppTheme.darkCard : Colors.white,
           elevation: 0,
           type: BottomNavigationBarType.fixed,
           selectedLabelStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700),

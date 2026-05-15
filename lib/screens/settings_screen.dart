@@ -10,7 +10,11 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
+<<<<<<< Updated upstream
   bool darkMode = false;
+=======
+  final db = DatabaseService();
+>>>>>>> Stashed changes
   bool notifications = true;
 
   @override
@@ -24,6 +28,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         padding: const EdgeInsets.all(16),
 
         children: [
+<<<<<<< Updated upstream
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
@@ -39,17 +44,47 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   backgroundColor: AppTheme.primaryLight,
                   child: const Icon(Icons.person, color: AppTheme.primary, size: 30),
                 ),
+=======
+          if (db.currentUser != null)
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Theme.of(context).brightness == Brightness.dark ? AppTheme.darkCard : Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: AppTheme.divider),
+              ),
 
-                const SizedBox(width: 16),
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    radius: 28,
+                    backgroundColor: AppTheme.primaryLight,
+                    child: Text(
+                      db.currentUser!.name.isNotEmpty ? db.currentUser!.name[0].toUpperCase() : '?',
+                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.primary),
+                    ),
+                  ),
+>>>>>>> Stashed changes
 
+                  const SizedBox(width: 16),
+
+<<<<<<< Updated upstream
                 const Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text("Volunteer User", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+=======
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(db.currentUser!.name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+>>>>>>> Stashed changes
 
-                      SizedBox(height: 4),
+                        SizedBox(height: 4),
 
+<<<<<<< Updated upstream
                       Text("volunteer@test.com", style: TextStyle(color: AppTheme.textSecondary)),
                     ],
                   ),
@@ -57,8 +92,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
                 Icon(Icons.edit_outlined, color: AppTheme.textLight),
               ],
+=======
+                        Text(db.currentUser!.email, style: const TextStyle(color: AppTheme.textSecondary)),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+>>>>>>> Stashed changes
             ),
-          ),
 
           const SizedBox(height: 24),
 
@@ -74,13 +116,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
 
             child: SwitchListTile(
-              value: darkMode,
+              value: Theme.of(context).brightness == Brightness.dark,
 
               onChanged: (value) {
-                setState(() {
-                  darkMode = value;
-                });
-
                 VolunteerApp.of(context)?.toggleTheme(value);
               },
 
