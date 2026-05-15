@@ -43,24 +43,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   void dispose() {
-    _nameCtrl.dispose(); _bioCtrl.dispose();
-    _orgNameCtrl.dispose(); _orgDescCtrl.dispose();
+    _nameCtrl.dispose();
+    _bioCtrl.dispose();
+    _orgNameCtrl.dispose();
+    _orgDescCtrl.dispose();
     super.dispose();
   }
 
   Future<void> _save() async {
     final user = db.currentUser!;
-    await db.updateUser(user.copyWith(
-      name: _nameCtrl.text.trim(),
-      bio: _bioCtrl.text.trim().isEmpty ? null : _bioCtrl.text.trim(),
-      orgName: _orgNameCtrl.text.trim().isEmpty ? null : _orgNameCtrl.text.trim(),
-      orgDescription: _orgDescCtrl.text.trim().isEmpty ? null : _orgDescCtrl.text.trim(),
-      skills: _skills,
-    ));
+    await db.updateUser(
+      user.copyWith(
+        name: _nameCtrl.text.trim(),
+        bio: _bioCtrl.text.trim().isEmpty ? null : _bioCtrl.text.trim(),
+        orgName: _orgNameCtrl.text.trim().isEmpty ? null : _orgNameCtrl.text.trim(),
+        orgDescription: _orgDescCtrl.text.trim().isEmpty ? null : _orgDescCtrl.text.trim(),
+        skills: _skills,
+      ),
+    );
     setState(() => _editMode = false);
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('✅ Profile updated!')));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('✅ Profile updated!')));
     }
   }
 
@@ -72,19 +75,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final acceptedCount = apps.where((a) => a.status == ApplicationStatus.accepted).length;
 
     return Scaffold(
-      backgroundColor: AppTheme.surface,
+      backgroundColor: Theme.of(context).brightness == Brightness.dark ? AppTheme.darkSurface : AppTheme.surface,
       body: CustomScrollView(
         slivers: [
           SliverAppBar(
             expandedHeight: 200,
             pinned: true,
             backgroundColor: AppTheme.primary,
-            foregroundColor: Colors.white,
+            foregroundColor: Theme.of(context).brightness == Brightness.dark ? AppTheme.darkCard : Colors.white,
             actions: [
               if (!_editMode)
                 IconButton(
                   icon: const Icon(Icons.edit_outlined),
-                  onPressed: () => setState(() { _editMode = true; _initControllers(); }),
+                  onPressed: () => setState(() {
+                    _editMode = true;
+                    _initControllers();
+                  }),
                 ),
               if (_editMode) ...[
                 TextButton(
@@ -93,24 +99,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
                 TextButton(
                   onPressed: _save,
-                  child: const Text('Save', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+                  child: const Text(
+                    'Save',
+                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+                  ),
                 ),
               ],
               IconButton(
                 icon: const Icon(Icons.settings_outlined),
-                onPressed: () => Navigator.push(context,
-                    MaterialPageRoute(builder: (_) => const SettingsScreen()))
-                    .then((_) => setState(() {})),
+                onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsScreen())).then((_) => setState(() {})),
               ),
             ],
             flexibleSpace: FlexibleSpaceBar(
               background: Container(
                 decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [AppTheme.primaryDark, AppTheme.primary],
-                  ),
+                  gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [AppTheme.primaryDark, AppTheme.primary]),
                 ),
                 child: SafeArea(
                   child: Column(
@@ -119,21 +122,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       const SizedBox(height: 30),
                       CircleAvatar(
                         radius: 38,
-                        backgroundColor: Colors.white.withOpacity(0.2),
+                        backgroundColor: Theme.of(context).brightness == Brightness.dark ? AppTheme.darkCard : Colors.white.withOpacity(0.2),
                         child: Text(
                           user.name[0].toUpperCase(),
                           style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w700, color: Colors.white),
                         ),
                       ),
                       const SizedBox(height: 10),
-                      Text(user.name,
-                          style: const TextStyle(
-                              fontSize: 18, fontWeight: FontWeight.w700, color: Colors.white)),
+                      Text(
+                        user.name,
+                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Colors.white),
+                      ),
                       const SizedBox(height: 4),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
+                          color: Theme.of(context).brightness == Brightness.dark ? AppTheme.darkCard : Colors.white.withOpacity(0.2),
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(
@@ -155,22 +159,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 children: [
                   // Stats
                   if (!isOrg) ...[
-                    Row(children: [
-                      Expanded(child: _statCard('${apps.length}', 'Applied', Icons.send_outlined, AppTheme.primary)),
-                      const SizedBox(width: 10),
-                      Expanded(child: _statCard('$acceptedCount', 'Accepted', Icons.check_circle_outline, AppTheme.success)),
-                      const SizedBox(width: 10),
-                      Expanded(child: _statCard(
-                          DateFormat('MMM y').format(user.joinedAt), 'Joined',
-                          Icons.calendar_today_outlined, AppTheme.accent)),
-                    ]),
+                    Row(
+                      children: [
+                        Expanded(child: _statCard('${apps.length}', 'Applied', Icons.send_outlined, AppTheme.primary)),
+                        const SizedBox(width: 10),
+                        Expanded(child: _statCard('$acceptedCount', 'Accepted', Icons.check_circle_outline, AppTheme.success)),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: _statCard(DateFormat('MMM y').format(user.joinedAt), 'Joined', Icons.calendar_today_outlined, AppTheme.accent),
+                        ),
+                      ],
+                    ),
                     const SizedBox(height: 20),
                   ],
 
-                  if (_editMode)
-                    _buildEditForm(isOrg, user)
-                  else
-                    _buildViewMode(isOrg, user),
+                  if (_editMode) _buildEditForm(isOrg, user) else _buildViewMode(isOrg, user),
                 ],
               ),
             ),
@@ -186,28 +189,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
       children: [
         if (isOrg && user.orgName != null) ...[
           _sectionCard([
-            _infoRow(Icons.business_outlined, 'Organization', user.orgName!),
-            if (user.orgDescription != null)
-              _infoRow(Icons.description_outlined, 'About', user.orgDescription!),
+            _infoRow(context, Icons.business_outlined, 'Organization', user.orgName!),
+            if (user.orgDescription != null) _infoRow(context, Icons.description_outlined, 'About', user.orgDescription!),
           ]),
           const SizedBox(height: 16),
         ],
 
         _sectionCard([
-          _infoRow(Icons.person_outline, 'Name', user.name),
-          _infoRow(Icons.email_outlined, 'Email', user.email),
-          if (user.bio != null && user.bio!.isNotEmpty)
-            _infoRow(Icons.notes_outlined, 'Bio', user.bio!),
+          _infoRow(context, Icons.person_outline, 'Name', user.name),
+          _infoRow(context, Icons.email_outlined, 'Email', user.email),
+          if (user.bio != null && user.bio!.isNotEmpty) _infoRow(context, Icons.notes_outlined, 'Bio', user.bio!),
         ]),
 
         if (!isOrg && user.skills.isNotEmpty) ...[
           const SizedBox(height: 20),
           const SectionHeader(title: 'My Skills'),
           const SizedBox(height: 12),
-          Wrap(
-            spacing: 8, runSpacing: 8,
-            children: user.skills.map((s) => SkillChip(skill: s, selected: true)).toList(),
-          ),
+          Wrap(spacing: 8, runSpacing: 8, children: user.skills.map((s) => SkillChip(skill: s, selected: true)).toList()),
         ],
 
         const SizedBox(height: 20),
@@ -243,11 +241,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
             decoration: const InputDecoration(labelText: 'Bio (optional)', prefixIcon: Icon(Icons.notes_outlined)),
           ),
           const SizedBox(height: 20),
-          const Text('My Skills',
-              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.textPrimary)),
+          const Text(
+            'My Skills',
+            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.textPrimary),
+          ),
           const SizedBox(height: 10),
           Wrap(
-            spacing: 8, runSpacing: 8,
+            spacing: 8,
+            runSpacing: 8,
             children: AppConstants.allSkills.map((s) {
               final sel = _skills.contains(s);
               return GestureDetector(
@@ -260,10 +261,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(color: sel ? AppTheme.primary : AppTheme.divider),
                   ),
-                  child: Text(s,
-                      style: TextStyle(
-                          fontSize: 12, fontWeight: FontWeight.w600,
-                          color: sel ? Colors.white : AppTheme.textSecondary)),
+                  child: Text(
+                    s,
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: sel ? Colors.white : AppTheme.textSecondary),
+                  ),
                 ),
               );
             }).toList(),
@@ -288,7 +289,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).brightness == Brightness.dark ? AppTheme.darkCard : Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppTheme.divider),
       ),
@@ -298,8 +299,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           return Column(
             children: [
               child,
-              if (idx < children.length - 1)
-                const Divider(color: AppTheme.divider, height: 20),
+              if (idx < children.length - 1) const Divider(color: AppTheme.divider, height: 20),
             ],
           );
         }).toList(),
@@ -307,7 +307,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _infoRow(IconData icon, String label, String value) {
+  Widget _infoRow(BuildContext context, IconData icon, String label, String value) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -316,9 +316,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(label, style: const TextStyle(fontSize: 11, color: AppTheme.textLight, fontWeight: FontWeight.w500)),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 11,
+                color: Theme.of(context).brightness == Brightness.dark ? AppTheme.darkSecondaryText : AppTheme.textLight,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
             const SizedBox(height: 2),
-            Text(value, style: const TextStyle(fontSize: 14, color: AppTheme.textPrimary, fontWeight: FontWeight.w500)),
+            Text(
+              value,
+              style: TextStyle(
+                fontSize: 14,
+                color: Theme.of(context).brightness == Brightness.dark ? AppTheme.darkText : AppTheme.textPrimary,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
           ],
         ),
       ],
@@ -337,12 +351,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
         children: [
           Icon(icon, color: color, size: 18),
           const SizedBox(height: 6),
-          Text(value,
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: color),
-              textAlign: TextAlign.center),
-          Text(label,
-              style: const TextStyle(fontSize: 10, color: AppTheme.textSecondary),
-              textAlign: TextAlign.center),
+          Text(
+            value,
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: color),
+            textAlign: TextAlign.center,
+          ),
+          Text(
+            label,
+            style: const TextStyle(fontSize: 10, color: AppTheme.textSecondary),
+            textAlign: TextAlign.center,
+          ),
         ],
       ),
     );
@@ -368,6 +386,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       await db.logout();
       Navigator.pushAndRemoveUntil(context,
           MaterialPageRoute(builder: (_) => const OnboardingScreen()), (_) => false);
+
     }
   }
 }

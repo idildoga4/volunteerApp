@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:volunteer/widgets/theme.dart';
 import '../models/models.dart';
 import 'package:intl/intl.dart';
+import '../services/database_service.dart';
 
 class TaskCard extends StatelessWidget {
   final Task task;
@@ -17,6 +18,8 @@ class TaskCard extends StatelessWidget {
     final catColor = AppConstants.categoryColors[task.category] ?? AppTheme.primary;
 
     final spotsLeft = task.volunteersNeeded - task.volunteersApplied;
+
+    final isOrganization = DatabaseService().currentUser?.role == UserRole.organization;
 
     return GestureDetector(
       onTap: onTap,
@@ -43,7 +46,7 @@ class TaskCard extends StatelessWidget {
               padding: const EdgeInsets.all(16),
 
               decoration: BoxDecoration(
-                color: catColor.withOpacity(0.06),
+                color: Theme.of(context).brightness == Brightness.dark ? catColor.withOpacity(0.18) : catColor.withOpacity(0.06),
 
                 borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
               ),
@@ -62,7 +65,10 @@ class TaskCard extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
 
-                          decoration: BoxDecoration(color: catColor.withOpacity(0.12), borderRadius: BorderRadius.circular(6)),
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).brightness == Brightness.dark ? catColor.withOpacity(0.25) : catColor.withOpacity(0.12),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
 
                           child: Text(
                             task.category,
@@ -94,11 +100,12 @@ class TaskCard extends StatelessWidget {
 
                   const SizedBox(width: 8),
 
-                  GestureDetector(
-                    onTap: onFavoriteToggle,
+                  if (!isOrganization)
+                    GestureDetector(
+                      onTap: onFavoriteToggle,
 
-                    child: Icon(isFavorite ? Icons.favorite : Icons.favorite_border, color: isFavorite ? Colors.red : AppTheme.textLight),
-                  ),
+                      child: Icon(isFavorite ? Icons.favorite : Icons.favorite_border, color: isFavorite ? Colors.red : AppTheme.textLight),
+                    ),
                 ],
               ),
             ),
@@ -380,7 +387,8 @@ class EmptyState extends StatelessWidget {
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(40),
         child: Column(
-          mainAxisSize: MainAxisSize.min, 
+          mainAxisSize: MainAxisSize.min,
+
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(emoji, style: const TextStyle(fontSize: 64)),

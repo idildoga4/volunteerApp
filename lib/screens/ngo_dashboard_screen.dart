@@ -16,8 +16,7 @@ class NgoDashboardScreen extends StatefulWidget {
   State<NgoDashboardScreen> createState() => _NgoDashboardScreenState();
 }
 
-class _NgoDashboardScreenState extends State<NgoDashboardScreen>
-    with SingleTickerProviderStateMixin {
+class _NgoDashboardScreenState extends State<NgoDashboardScreen> with SingleTickerProviderStateMixin {
   final db = DatabaseService();
   late TabController _tabs;
 
@@ -44,13 +43,13 @@ class _NgoDashboardScreenState extends State<NgoDashboardScreen>
     });
 
     return Scaffold(
-      backgroundColor: AppTheme.surface,
+      backgroundColor: Theme.of(context).brightness == Brightness.dark ? AppTheme.darkSurface : AppTheme.surface,
       body: SafeArea(
         child: NestedScrollView(
           headerSliverBuilder: (_, __) => [
             SliverToBoxAdapter(
               child: Container(
-                color: Colors.white,
+                color: Theme.of(context).brightness == Brightness.dark ? AppTheme.darkCard : Colors.white,
                 padding: const EdgeInsets.all(20),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -61,26 +60,28 @@ class _NgoDashboardScreenState extends State<NgoDashboardScreen>
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text('Dashboard',
-                                  style: TextStyle(
-                                      fontSize: 22, fontWeight: FontWeight.w800,
-                                      color: AppTheme.textPrimary, letterSpacing: -0.3)),
-                              Text(user.orgName ?? user.name,
-                                  style: const TextStyle(
-                                      fontSize: 13, color: AppTheme.primary,
-                                      fontWeight: FontWeight.w600)),
+                              Text(
+                                'Dashboard',
+                                style: TextStyle(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.w800,
+                                  color: Theme.of(context).brightness == Brightness.dark ? Colors.white : AppTheme.textPrimary,
+                                  letterSpacing: -0.3,
+                                ),
+                              ),
+                              Text(
+                                user.orgName ?? user.name,
+                                style: const TextStyle(fontSize: 13, color: AppTheme.primary, fontWeight: FontWeight.w600),
+                              ),
                             ],
                           ),
                         ),
                         ElevatedButton.icon(
-                          onPressed: () => Navigator.push(context,
-                              MaterialPageRoute(builder: (_) => const CreateTaskScreen()))
-                              .then((_) => setState(() {})),
+                          onPressed: () =>
+                              Navigator.push(context, MaterialPageRoute(builder: (_) => const CreateTaskScreen())).then((_) => setState(() {})),
                           icon: const Icon(Icons.add, size: 18),
                           label: const Text('Post Task'),
-                          style: ElevatedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                          ),
+                          style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10)),
                         ),
                       ],
                     ),
@@ -114,22 +115,13 @@ class _NgoDashboardScreenState extends State<NgoDashboardScreen>
               ),
             ),
           ],
-          body: TabBarView(
-            controller: _tabs,
-            children: [
-              _taskList(openTasks),
-              _taskList(myTasks),
-              _taskList(completedTasks),
-            ],
-          ),
+          body: TabBarView(controller: _tabs, children: [_taskList(openTasks), _taskList(myTasks), _taskList(completedTasks)]),
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => Navigator.push(context,
-            MaterialPageRoute(builder: (_) => const CreateTaskScreen()))
-            .then((_) => setState(() {})),
+        onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CreateTaskScreen())).then((_) => setState(() {})),
         backgroundColor: AppTheme.primary,
-        foregroundColor: Colors.white,
+        foregroundColor: Theme.of(context).brightness == Brightness.dark ? AppTheme.darkCard : Colors.white,
         icon: const Icon(Icons.add),
         label: const Text('Post Task', style: TextStyle(fontWeight: FontWeight.w700)),
       ),
@@ -143,9 +135,7 @@ class _NgoDashboardScreenState extends State<NgoDashboardScreen>
         title: 'No Tasks Here',
         subtitle: 'Post your first volunteer task to get started.',
         buttonLabel: 'Post a Task',
-        onButton: () => Navigator.push(context,
-            MaterialPageRoute(builder: (_) => const CreateTaskScreen()))
-            .then((_) => setState(() {})),
+        onButton: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CreateTaskScreen())).then((_) => setState(() {})),
       );
     }
     return ListView.builder(
@@ -159,7 +149,7 @@ class _NgoDashboardScreenState extends State<NgoDashboardScreen>
         return Container(
           margin: const EdgeInsets.only(bottom: 12),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: Theme.of(context).brightness == Brightness.dark ? AppTheme.darkCard : Colors.white,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(color: AppTheme.divider),
           ),
@@ -168,8 +158,7 @@ class _NgoDashboardScreenState extends State<NgoDashboardScreen>
               ListTile(
                 contentPadding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
                 leading: Text(task.imageEmoji, style: const TextStyle(fontSize: 32)),
-                title: Text(task.title,
-                    style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
+                title: Text(task.title, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
                 subtitle: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -182,16 +171,14 @@ class _NgoDashboardScreenState extends State<NgoDashboardScreen>
                         const SizedBox(width: 10),
                         const Icon(Icons.calendar_today_outlined, size: 12, color: AppTheme.textLight),
                         const SizedBox(width: 3),
-                        Text(DateFormat('MMM d').format(task.date),
-                            style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
+                        Text(DateFormat('MMM d').format(task.date), style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
                       ],
                     ),
                   ],
                 ),
                 trailing: StatusBadge(status: task.status),
-                onTap: () => Navigator.push(context,
-                    MaterialPageRoute(builder: (_) => TaskDetailScreen(taskId: task.id)))
-                    .then((_) => setState(() {})),
+                onTap: () =>
+                    Navigator.push(context, MaterialPageRoute(builder: (_) => TaskDetailScreen(taskId: task.id))).then((_) => setState(() {})),
               ),
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
@@ -199,9 +186,8 @@ class _NgoDashboardScreenState extends State<NgoDashboardScreen>
                   children: [
                     Expanded(
                       child: OutlinedButton.icon(
-                        onPressed: () => Navigator.push(context,
-                            MaterialPageRoute(builder: (_) => ApplicantsScreen(task: task)))
-                            .then((_) => setState(() {})),
+                        onPressed: () =>
+                            Navigator.push(context, MaterialPageRoute(builder: (_) => ApplicantsScreen(task: task))).then((_) => setState(() {})),
                         icon: const Icon(Icons.people_outline, size: 16),
                         label: Text(
                           '${apps.length} Applicants${pendingCount > 0 ? ' · $pendingCount new' : ''}',
@@ -210,8 +196,7 @@ class _NgoDashboardScreenState extends State<NgoDashboardScreen>
                         style: OutlinedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 8),
                           foregroundColor: pendingCount > 0 ? AppTheme.accent : AppTheme.primary,
-                          side: BorderSide(
-                              color: pendingCount > 0 ? AppTheme.accent : AppTheme.primary),
+                          side: BorderSide(color: pendingCount > 0 ? AppTheme.accent : AppTheme.primary),
                         ),
                       ),
                     ),
@@ -275,8 +260,7 @@ class _NgoDashboardScreenState extends State<NgoDashboardScreen>
       await db.deleteTask(task.id);
       setState(() {});
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Task deleted')));
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Task deleted')));
       }
     }
   }
@@ -294,11 +278,14 @@ class _NgoDashboardScreenState extends State<NgoDashboardScreen>
         children: [
           Icon(icon, color: color, size: 20),
           const SizedBox(height: 8),
-          Text(value,
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: color)),
-          Text(label,
-              style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary,
-                  fontWeight: FontWeight.w500)),
+          Text(
+            value,
+            style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: color),
+          ),
+          Text(
+            label,
+            style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary, fontWeight: FontWeight.w500),
+          ),
         ],
       ),
     );

@@ -14,8 +14,7 @@ class MyApplicationsScreen extends StatefulWidget {
   State<MyApplicationsScreen> createState() => _MyApplicationsScreenState();
 }
 
-class _MyApplicationsScreenState extends State<MyApplicationsScreen>
-    with SingleTickerProviderStateMixin {
+class _MyApplicationsScreenState extends State<MyApplicationsScreen> with SingleTickerProviderStateMixin {
   final db = DatabaseService();
   late TabController _tabs;
 
@@ -40,23 +39,33 @@ class _MyApplicationsScreenState extends State<MyApplicationsScreen>
     final rejected = apps.where((a) => a.status == ApplicationStatus.rejected).toList();
 
     return Scaffold(
-      backgroundColor: AppTheme.surface,
+      backgroundColor: Theme.of(context).brightness == Brightness.dark ? AppTheme.darkSurface : AppTheme.surface,
       body: SafeArea(
         child: Column(
           children: [
             Container(
-              color: Colors.white,
+              color: Theme.of(context).brightness == Brightness.dark ? AppTheme.darkCard : Colors.white,
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('My Applications',
-                      style: TextStyle(
-                          fontSize: 22, fontWeight: FontWeight.w800,
-                          color: AppTheme.textPrimary, letterSpacing: -0.3)),
+                  Text(
+                    'My Applications',
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w800,
+                      color: Theme.of(context).brightness == Brightness.dark ? Colors.white : AppTheme.textPrimary,
+                      letterSpacing: -0.3,
+                    ),
+                  ),
                   const SizedBox(height: 4),
-                  Text('${apps.length} total applications',
-                      style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary)),
+                  Text(
+                    '${apps.length} total applications',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Theme.of(context).brightness == Brightness.dark ? AppTheme.darkSecondaryText : AppTheme.textSecondary,
+                    ),
+                  ),
                   const SizedBox(height: 16),
 
                   // Summary row
@@ -76,7 +85,7 @@ class _MyApplicationsScreenState extends State<MyApplicationsScreen>
                   TabBar(
                     controller: _tabs,
                     labelColor: AppTheme.primary,
-                    unselectedLabelColor: AppTheme.textSecondary,
+                    unselectedLabelColor: Theme.of(context).brightness == Brightness.dark ? AppTheme.darkSecondaryText : AppTheme.textSecondary,
                     indicatorColor: AppTheme.primary,
                     dividerColor: AppTheme.divider,
                     tabs: [
@@ -89,14 +98,7 @@ class _MyApplicationsScreenState extends State<MyApplicationsScreen>
               ),
             ),
             Expanded(
-              child: TabBarView(
-                controller: _tabs,
-                children: [
-                  _appList(pending),
-                  _appList(accepted),
-                  _appList(apps),
-                ],
-              ),
+              child: TabBarView(controller: _tabs, children: [_appList(pending), _appList(accepted), _appList(apps)]),
             ),
           ],
         ),
@@ -106,11 +108,7 @@ class _MyApplicationsScreenState extends State<MyApplicationsScreen>
 
   Widget _appList(List<TaskApplication> apps) {
     if (apps.isEmpty) {
-      return EmptyState(
-        emoji: '📭',
-        title: 'Nothing Here',
-        subtitle: 'Browse tasks and apply for volunteer opportunities!',
-      );
+      return EmptyState(emoji: '📭', title: 'Nothing Here', subtitle: 'Browse tasks and apply for volunteer opportunities!');
     }
     return ListView.builder(
       padding: const EdgeInsets.all(16),
@@ -122,13 +120,11 @@ class _MyApplicationsScreenState extends State<MyApplicationsScreen>
         final catColor = AppConstants.categoryColors[task.category] ?? AppTheme.primary;
 
         return GestureDetector(
-          onTap: () => Navigator.push(context,
-              MaterialPageRoute(builder: (_) => TaskDetailScreen(taskId: task.id)))
-              .then((_) => setState(() {})),
+          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => TaskDetailScreen(taskId: task.id))).then((_) => setState(() {})),
           child: Container(
             margin: const EdgeInsets.only(bottom: 12),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: Theme.of(context).brightness == Brightness.dark ? AppTheme.darkCard : Colors.white,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(color: AppTheme.divider),
             ),
@@ -150,15 +146,19 @@ class _MyApplicationsScreenState extends State<MyApplicationsScreen>
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(task.title,
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.w700, fontSize: 14,
-                                    color: AppTheme.textPrimary)),
+                            Text(
+                              task.title,
+                              style: TextStyle(
+                                fontWeight: FontWeight.w700,
+                                fontSize: 14,
+                                color: Theme.of(context).brightness == Brightness.dark ? Colors.white : AppTheme.textPrimary,
+                              ),
+                            ),
                             const SizedBox(height: 2),
-                            Text(task.organizationName,
-                                style: const TextStyle(
-                                    fontSize: 12, color: AppTheme.primary,
-                                    fontWeight: FontWeight.w600)),
+                            Text(
+                              task.organizationName,
+                              style: const TextStyle(fontSize: 12, color: AppTheme.primary, fontWeight: FontWeight.w600),
+                            ),
                           ],
                         ),
                       ),
@@ -175,22 +175,29 @@ class _MyApplicationsScreenState extends State<MyApplicationsScreen>
                         children: [
                           const Icon(Icons.location_on_outlined, size: 13, color: AppTheme.textLight),
                           const SizedBox(width: 4),
-                          Text(task.location,
-                              style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
+                          Text(
+                            task.location,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Theme.of(context).brightness == Brightness.dark ? AppTheme.darkSecondaryText : AppTheme.textSecondary,
+                            ),
+                          ),
                           const SizedBox(width: 12),
                           const Icon(Icons.calendar_today_outlined, size: 13, color: AppTheme.textLight),
                           const SizedBox(width: 4),
-                          Text(DateFormat('MMM d, yyyy').format(task.date),
-                              style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
+                          Text(
+                            DateFormat('MMM d, yyyy').format(task.date),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Theme.of(context).brightness == Brightness.dark ? AppTheme.darkSecondaryText : AppTheme.textSecondary,
+                            ),
+                          ),
                         ],
                       ),
                       const SizedBox(height: 10),
                       Container(
                         padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: AppTheme.surface,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
+                        decoration: BoxDecoration(color: AppTheme.surface, borderRadius: BorderRadius.circular(8)),
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -201,8 +208,11 @@ class _MyApplicationsScreenState extends State<MyApplicationsScreen>
                                 app.message,
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                    fontSize: 12, color: AppTheme.textSecondary, height: 1.4),
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Theme.of(context).brightness == Brightness.dark ? AppTheme.darkSecondaryText : AppTheme.textSecondary,
+                                  height: 1.4,
+                                ),
                               ),
                             ),
                           ],
@@ -216,8 +226,13 @@ class _MyApplicationsScreenState extends State<MyApplicationsScreen>
                             children: [
                               const Icon(Icons.schedule_outlined, size: 12, color: AppTheme.textLight),
                               const SizedBox(width: 4),
-                              Text('Available: ${app.availability}',
-                                  style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary)),
+                              Text(
+                                'Available: ${app.availability}',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: Theme.of(context).brightness == Brightness.dark ? AppTheme.darkSecondaryText : AppTheme.textSecondary,
+                                ),
+                              ),
                             ],
                           ),
                           Text(
@@ -230,18 +245,15 @@ class _MyApplicationsScreenState extends State<MyApplicationsScreen>
                         const SizedBox(height: 10),
                         Container(
                           padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: AppTheme.successLight,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
+                          decoration: BoxDecoration(color: AppTheme.successLight, borderRadius: BorderRadius.circular(8)),
                           child: const Row(
                             children: [
                               Icon(Icons.celebration, color: AppTheme.success, size: 16),
                               SizedBox(width: 8),
-                              Text('Congratulations! You\'ve been accepted.',
-                                  style: TextStyle(
-                                      fontSize: 12, color: AppTheme.success,
-                                      fontWeight: FontWeight.w600)),
+                              Text(
+                                'Congratulations! You\'ve been accepted.',
+                                style: TextStyle(fontSize: 12, color: AppTheme.success, fontWeight: FontWeight.w600),
+                              ),
                             ],
                           ),
                         ),
@@ -260,12 +272,11 @@ class _MyApplicationsScreenState extends State<MyApplicationsScreen>
   Widget _chip(String label, Color color) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(20),
+      decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(20)),
+      child: Text(
+        label,
+        style: TextStyle(fontSize: 11, color: color, fontWeight: FontWeight.w700),
       ),
-      child: Text(label,
-          style: TextStyle(fontSize: 11, color: color, fontWeight: FontWeight.w700)),
     );
   }
 }

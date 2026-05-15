@@ -60,12 +60,23 @@ class _HomeScreenState extends State<HomeScreen> {
                             Text(
                               'Hello, ${user?.name.split(' ').first ?? 'there'} 👋',
 
-                              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: AppTheme.textPrimary, letterSpacing: -0.3),
+                              style: TextStyle(
+                                fontSize: 22,
+                                fontWeight: FontWeight.w800,
+                                color: Theme.of(context).brightness == Brightness.dark ? Colors.white : AppTheme.textPrimary,
+                                letterSpacing: -0.3,
+                              ),
                             ),
 
                             const SizedBox(height: 2),
 
-                            const Text('Find your next volunteer opportunity', style: TextStyle(fontSize: 13, color: AppTheme.textSecondary)),
+                            Text(
+                              'Find your next volunteer opportunity',
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Theme.of(context).brightness == Brightness.dark ? AppTheme.darkSecondaryText : AppTheme.textSecondary,
+                              ),
+                            ),
                           ],
                         ),
 
@@ -182,7 +193,15 @@ class _HomeScreenState extends State<HomeScreen> {
                                   Text(
                                     cat,
 
-                                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: sel ? Colors.white : AppTheme.textSecondary),
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                      color: sel
+                                          ? Colors.white
+                                          : Theme.of(context).brightness == Brightness.dark
+                                          ? AppTheme.darkSecondaryText
+                                          : AppTheme.textSecondary,
+                                    ),
                                   ),
                                 ],
                               ),
@@ -243,7 +262,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
             tasks.isEmpty
                 ? SliverFillRemaining(
-                    hasScrollBody: false, 
+                    hasScrollBody: false,
+
                     child: EmptyState(
                       emoji: '🔍',
                       title: 'No Tasks Found',

@@ -46,25 +46,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                 ),
 
-                const SizedBox(width: 16),
+                  const SizedBox(width: 16),
 
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(db.currentUser!.name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(db.currentUser!.name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
 
-                      SizedBox(height: 4),
+                        SizedBox(height: 4),
 
                       Text(db.currentUser!.email, style: const TextStyle(color: AppTheme.textSecondary)),
                     ],
                   ),
                 ),
-
+               ),
                 
               ],
+             ),
             ),
-          ),
 
           const SizedBox(height: 24),
 
@@ -80,13 +80,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
 
             child: SwitchListTile(
-              value: darkMode,
+              value: Theme.of(context).brightness == Brightness.dark,
 
               onChanged: (value) {
-                setState(() {
-                  darkMode = value;
-                });
-
                 VolunteerApp.of(context)?.toggleTheme(value);
               },
 
