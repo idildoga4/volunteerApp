@@ -22,8 +22,10 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
   Widget build(BuildContext context) {
     final task = db.getTask(widget.taskId);
     if (task == null) {
-      return Scaffold(appBar: AppBar(title: const Text('Task')),
-          body: const Center(child: Text('Task not found')));
+      return Scaffold(
+        appBar: AppBar(title: const Text('Task')),
+        body: const Center(child: Text('Task not found')),
+      );
     }
 
     final user = db.currentUser;
@@ -33,7 +35,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
     final spotsLeft = task.volunteersNeeded - task.volunteersApplied;
 
     return Scaffold(
-      backgroundColor: AppTheme.surface,
+      backgroundColor: Theme.of(context).brightness == Brightness.dark ? AppTheme.darkSurface : AppTheme.surface,
       body: CustomScrollView(
         slivers: [
           // Hero header
@@ -41,15 +43,11 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
             expandedHeight: 220,
             pinned: true,
             backgroundColor: catColor,
-            foregroundColor: Colors.white,
+            foregroundColor: Theme.of(context).brightness == Brightness.dark ? AppTheme.darkCard : Colors.white,
             flexibleSpace: FlexibleSpaceBar(
               background: Container(
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [catColor, catColor.withOpacity(0.7)],
-                  ),
+                  gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [catColor, catColor.withOpacity(0.7)]),
                 ),
                 child: SafeArea(
                   child: Column(
@@ -61,21 +59,20 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
+                          color: Theme.of(context).brightness == Brightness.dark ? AppTheme.darkCard : Colors.white.withOpacity(0.2),
                           borderRadius: BorderRadius.circular(20),
                         ),
-                        child: Text(task.category,
-                            style: const TextStyle(
-                                color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700)),
+                        child: Text(
+                          task.category,
+                          style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700),
+                        ),
                       ),
                     ],
                   ),
                 ),
               ),
             ),
-            actions: [
-              IconButton(icon: const Icon(Icons.share_outlined), onPressed: () {}),
-            ],
+            actions: [IconButton(icon: const Icon(Icons.share_outlined), onPressed: () {})],
           ),
 
           SliverToBoxAdapter(
@@ -89,19 +86,25 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Expanded(
-                        child: Text(task.title,
-                            style: const TextStyle(
-                                fontSize: 22, fontWeight: FontWeight.w800,
-                                color: AppTheme.textPrimary, letterSpacing: -0.4)),
+                        child: Text(
+                          task.title,
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.w800,
+                            color: Theme.of(context).brightness == Brightness.dark ? AppTheme.darkText : AppTheme.textPrimary,
+                            letterSpacing: -0.4,
+                          ),
+                        ),
                       ),
                       const SizedBox(width: 12),
                       StatusBadge(status: task.status),
                     ],
                   ),
                   const SizedBox(height: 6),
-                  Text(task.organizationName,
-                      style: const TextStyle(
-                          fontSize: 14, color: AppTheme.primary, fontWeight: FontWeight.w600)),
+                  Text(
+                    task.organizationName,
+                    style: const TextStyle(fontSize: 14, color: AppTheme.primary, fontWeight: FontWeight.w600),
+                  ),
 
                   const SizedBox(height: 20),
 
@@ -114,7 +117,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: Theme.of(context).brightness == Brightness.dark ? AppTheme.darkCard : Colors.white,
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(color: AppTheme.divider),
                     ),
@@ -124,15 +127,16 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            const Text('Volunteer Spots',
-                                style: TextStyle(
-                                    fontWeight: FontWeight.w700, color: AppTheme.textPrimary)),
+                            Text(
+                              'Volunteer Spots',
+                              style: TextStyle(
+                                fontWeight: FontWeight.w700,
+                                color: Theme.of(context).brightness == Brightness.dark ? AppTheme.darkText : AppTheme.textPrimary,
+                              ),
+                            ),
                             Text(
                               task.isFull ? '🔴 Full' : '🟢 $spotsLeft left',
-                              style: TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w700,
-                                  color: task.isFull ? AppTheme.danger : AppTheme.success),
+                              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: task.isFull ? AppTheme.danger : AppTheme.success),
                             ),
                           ],
                         ),
@@ -142,14 +146,18 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                           child: LinearProgressIndicator(
                             value: task.fillRate.clamp(0.0, 1.0),
                             backgroundColor: AppTheme.divider,
-                            valueColor: AlwaysStoppedAnimation(
-                                task.isFull ? AppTheme.danger : catColor),
+                            valueColor: AlwaysStoppedAnimation(task.isFull ? AppTheme.danger : catColor),
                             minHeight: 10,
                           ),
                         ),
                         const SizedBox(height: 8),
-                        Text('${task.volunteersApplied} of ${task.volunteersNeeded} volunteers',
-                            style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
+                        Text(
+                          '${task.volunteersApplied} of ${task.volunteersNeeded} volunteers',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Theme.of(context).brightness == Brightness.dark ? AppTheme.darkSecondaryText : AppTheme.textSecondary,
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -157,26 +165,36 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                   const SizedBox(height: 20),
 
                   // Description
-                  const Text('About this Task',
-                      style: TextStyle(
-                          fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.textPrimary)),
+                  Text(
+                    'About this Task',
+                    style: TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w700,
+                      color: Theme.of(context).brightness == Brightness.dark ? AppTheme.darkText : AppTheme.textPrimary,
+                    ),
+                  ),
                   const SizedBox(height: 10),
-                  Text(task.description,
-                      style: const TextStyle(
-                          fontSize: 14, color: AppTheme.textSecondary, height: 1.7)),
+                  Text(
+                    task.description,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Theme.of(context).brightness == Brightness.dark ? AppTheme.darkSecondaryText : AppTheme.textSecondary,
+                      height: 1.7,
+                    ),
+                  ),
 
                   if (task.requiredSkills.isNotEmpty) ...[
                     const SizedBox(height: 20),
-                    const Text('Required Skills',
-                        style: TextStyle(
-                            fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.textPrimary)),
-                    const SizedBox(height: 10),
-                    Wrap(
-                      spacing: 8, runSpacing: 8,
-                      children: task.requiredSkills
-                          .map((s) => SkillChip(skill: s, selected: true))
-                          .toList(),
+                    Text(
+                      'Required Skills',
+                      style: TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w700,
+                        color: Theme.of(context).brightness == Brightness.dark ? AppTheme.darkText : AppTheme.textPrimary,
+                      ),
                     ),
+                    const SizedBox(height: 10),
+                    Wrap(spacing: 8, runSpacing: 8, children: task.requiredSkills.map((s) => SkillChip(skill: s, selected: true)).toList()),
                   ],
 
                   if (existingApp != null) ...[
@@ -195,9 +213,10 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text('Application Submitted',
-                                  style: TextStyle(
-                                      fontWeight: FontWeight.w700, color: AppTheme.primary)),
+                              const Text(
+                                'Application Submitted',
+                                style: TextStyle(fontWeight: FontWeight.w700, color: AppTheme.primary),
+                              ),
                               const SizedBox(height: 2),
                               AppStatusBadge(status: existingApp.status),
                             ],
@@ -220,18 +239,16 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                 child: existingApp != null
                     ? Container(
                         padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: AppTheme.successLight,
-                          borderRadius: BorderRadius.circular(14),
-                        ),
+                        decoration: BoxDecoration(color: AppTheme.successLight, borderRadius: BorderRadius.circular(14)),
                         child: const Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Icon(Icons.check, color: AppTheme.success),
                             SizedBox(width: 8),
-                            Text('Application Submitted',
-                                style: TextStyle(
-                                    color: AppTheme.success, fontWeight: FontWeight.w700)),
+                            Text(
+                              'Application Submitted',
+                              style: TextStyle(color: AppTheme.success, fontWeight: FontWeight.w700),
+                            ),
                           ],
                         ),
                       )
@@ -239,15 +256,12 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                         onPressed: task.isFull
                             ? null
                             : () => Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (_) => ApplyTaskScreen(task: task)),
-                                ).then((_) => setState(() {})),
+                                context,
+                                MaterialPageRoute(builder: (_) => ApplyTaskScreen(task: task)),
+                              ).then((_) => setState(() {})),
                         icon: const Icon(Icons.send_outlined),
                         label: Text(task.isFull ? 'Task Full' : 'Apply to Volunteer'),
-                        style: ElevatedButton.styleFrom(
-                          minimumSize: const Size(double.infinity, 52),
-                        ),
+                        style: ElevatedButton.styleFrom(minimumSize: const Size(double.infinity, 52)),
                       ),
               ),
             )
@@ -265,8 +279,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
       childAspectRatio: 2.4,
       children: [
         _infoTile(Icons.location_on_outlined, 'Location', task.location, AppTheme.danger),
-        _infoTile(Icons.calendar_today_outlined, 'Date',
-            DateFormat('MMM d, yyyy').format(task.date), AppTheme.primary),
+        _infoTile(Icons.calendar_today_outlined, 'Date', DateFormat('MMM d, yyyy').format(task.date), AppTheme.primary),
         _infoTile(Icons.access_time_outlined, 'Duration', task.duration, AppTheme.success),
         _infoTile(Icons.category_outlined, 'Category', task.category, AppTheme.accent),
       ],
@@ -290,13 +303,19 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(label,
-                    style: const TextStyle(fontSize: 10, color: AppTheme.textLight,
-                        fontWeight: FontWeight.w500)),
-                Text(value,
-                    style: const TextStyle(fontSize: 12, color: AppTheme.textPrimary,
-                        fontWeight: FontWeight.w700),
-                    overflow: TextOverflow.ellipsis),
+                Text(
+                  label,
+                  style: const TextStyle(fontSize: 10, color: AppTheme.textLight, fontWeight: FontWeight.w500),
+                ),
+                Text(
+                  value,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Theme.of(context).brightness == Brightness.dark ? AppTheme.darkText : AppTheme.textPrimary,
+                    fontWeight: FontWeight.w700,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
               ],
             ),
           ),
