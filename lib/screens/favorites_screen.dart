@@ -6,8 +6,9 @@ import 'task_detail_screen.dart';
 
 class FavoritesScreen extends StatelessWidget {
   final List<Task> favoriteTasks;
+  final ValueChanged<String> onFavoriteToggle;
 
-  const FavoritesScreen({super.key, required this.favoriteTasks});
+  const FavoritesScreen({super.key, required this.favoriteTasks, required this.onFavoriteToggle});
 
   @override
   Widget build(BuildContext context) {
@@ -28,7 +29,7 @@ class FavoritesScreen extends StatelessWidget {
 
                   isFavorite: true,
 
-                  onFavoriteToggle: () {},
+                  onFavoriteToggle: () => onFavoriteToggle(favoriteTasks[i].id),
 
                   onTap: () {
                     Navigator.push(context, MaterialPageRoute(builder: (_) => TaskDetailScreen(taskId: favoriteTasks[i].id)));

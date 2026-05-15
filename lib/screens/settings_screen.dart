@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../main.dart';
+import '../services/database_service.dart';
 import '../widgets/theme.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -10,11 +11,8 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-<<<<<<< Updated upstream
-  bool darkMode = false;
-=======
   final db = DatabaseService();
->>>>>>> Stashed changes
+  bool darkMode = false;
   bool notifications = true;
 
   @override
@@ -28,7 +26,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         padding: const EdgeInsets.all(16),
 
         children: [
-<<<<<<< Updated upstream
+          if (db.currentUser != null)
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
@@ -42,64 +40,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 CircleAvatar(
                   radius: 28,
                   backgroundColor: AppTheme.primaryLight,
-                  child: const Icon(Icons.person, color: AppTheme.primary, size: 30),
-                ),
-=======
-          if (db.currentUser != null)
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Theme.of(context).brightness == Brightness.dark ? AppTheme.darkCard : Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: AppTheme.divider),
-              ),
-
-              child: Row(
-                children: [
-                  CircleAvatar(
-                    radius: 28,
-                    backgroundColor: AppTheme.primaryLight,
-                    child: Text(
-                      db.currentUser!.name.isNotEmpty ? db.currentUser!.name[0].toUpperCase() : '?',
-                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.primary),
-                    ),
+                  child: Text(
+                    db.currentUser!.name.isNotEmpty ? db.currentUser!.name[0].toUpperCase() : '?',
+                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppTheme.primary),
                   ),
->>>>>>> Stashed changes
+                ),
 
                   const SizedBox(width: 16),
 
-<<<<<<< Updated upstream
-                const Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text("Volunteer User", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
-=======
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(db.currentUser!.name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
->>>>>>> Stashed changes
 
                         SizedBox(height: 4),
 
-<<<<<<< Updated upstream
-                      Text("volunteer@test.com", style: TextStyle(color: AppTheme.textSecondary)),
+                      Text(db.currentUser!.email, style: const TextStyle(color: AppTheme.textSecondary)),
                     ],
                   ),
                 ),
-
-                Icon(Icons.edit_outlined, color: AppTheme.textLight),
+               ),
+                
               ],
-=======
-                        Text(db.currentUser!.email, style: const TextStyle(color: AppTheme.textSecondary)),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
->>>>>>> Stashed changes
+             ),
             ),
 
           const SizedBox(height: 24),
@@ -166,7 +130,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
             ),
 
-            onPressed: () {
+            onPressed: () async {
+              await db.logout();
               Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
             },
 

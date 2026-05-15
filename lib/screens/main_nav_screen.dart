@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:volunteer/screens/profile_Screen.dart';
+import 'package:volunteer/screens/profile_screen.dart';
 import 'package:volunteer/widgets/theme.dart';
 
 import '../services/database_service.dart';
@@ -27,6 +27,23 @@ class _MainNavScreenState extends State<MainNavScreen> {
   void initState() {
     super.initState();
     _currentIndex = widget.initialIndex;
+    _loadFavorites();
+  }
+
+  Future<void> _loadFavorites() async {
+    await db.refreshAll();
+    if (!mounted) return;
+    setState(() {
+      favoriteTasks = db.getFavoriteTaskIds();
+    });
+  }
+
+  Future<void> _toggleFavorite(String taskId) async {
+    await db.toggleFavoriteTask(taskId);
+    if (!mounted) return;
+    setState(() {
+      favoriteTasks = db.getFavoriteTaskIds();
+    });
   }
 
   List<Widget> get _screens {
@@ -36,13 +53,7 @@ class _MainNavScreenState extends State<MainNavScreen> {
         HomeScreen(
           favoriteTasks: favoriteTasks,
           onFavoriteToggle: (taskId) {
-            setState(() {
-              if (favoriteTasks.contains(taskId)) {
-                favoriteTasks.remove(taskId);
-              } else {
-                favoriteTasks.add(taskId);
-              }
-            });
+            _toggleFavorite(taskId);
           },
         ),
         const NgoDashboardScreen(),
@@ -53,21 +64,12 @@ class _MainNavScreenState extends State<MainNavScreen> {
       HomeScreen(
         favoriteTasks: favoriteTasks,
         onFavoriteToggle: (taskId) {
-          setState(() {
-            if (favoriteTasks.contains(taskId)) {
-              favoriteTasks.remove(taskId);
-            } else {
-              favoriteTasks.add(taskId);
-            }
-          });
+          _toggleFavorite(taskId);
         },
       ),
 
-<<<<<<< Updated upstream
-      FavoritesScreen(favoriteTasks: db.getTasks().where((task) => favoriteTasks.contains(task.id)).toList()),
-=======
       FavoritesScreen(favoriteTasks: favoriteTasks.map((id) => db.getTask(id)).whereType<Task>().toList(), onFavoriteToggle: _toggleFavorite),
->>>>>>> Stashed changes
+
       const MyApplicationsScreen(),
       const ProfileScreen(),
     ];

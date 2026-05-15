@@ -6,6 +6,7 @@ import '../../models/models.dart';
 import '../../services/database_service.dart';
 
 import 'login_screen.dart';
+import 'profile_completion_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -21,10 +22,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _passCtrl = TextEditingController();
   final _orgNameCtrl = TextEditingController();
   final _orgDescCtrl = TextEditingController();
+  final _inviteCodeCtrl = TextEditingController();
 
   UserRole _role = UserRole.volunteer;
   List<String> _selectedSkills = [];
   bool _loading = false;
+  bool _googleLoading = false;
   bool _obscure = true;
   int _step = 0; // 0=basic, 1=details
 
@@ -32,6 +35,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   void dispose() {
     _nameCtrl.dispose(); _emailCtrl.dispose(); _passCtrl.dispose();
     _orgNameCtrl.dispose(); _orgDescCtrl.dispose();
+    _inviteCodeCtrl.dispose();
     super.dispose();
   }
 
@@ -56,12 +60,110 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (!mounted) return;
     setState(() => _loading = false);
     if (user != null) {
+      await db.refreshAll();
       Navigator.pushAndRemoveUntil(context,
           MaterialPageRoute(builder: (_) => const MainNavScreen()), (_) => false);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Email already registered.')));
     }
+  }
+
+  Future<void> _signUpWithGoogle() async {
+    String? orgName;
+    String? orgDescription;
+
+    if (_role == UserRole.organization) {
+      final orgInfo = await _showOrgInfoDialog();
+      if (orgInfo == null) return;
+      orgName = orgInfo.orgName;
+      orgDescription = orgInfo.orgDescription;
+    }
+
+    setState(() => _googleLoading = true);
+    final db = DatabaseService();
+    final result = await db.signInWithGoogle(
+      role: _role,
+      orgName: orgName,
+      orgDescription: orgDescription,
+    );
+    if (!mounted) return;
+    setState(() => _googleLoading = false);
+
+    if (result != null) {
+      if (result.isNewUser) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => ProfileCompletionScreen(user: result.user)),
+        );
+      } else {
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (_) => const MainNavScreen()),
+          (_) => false,
+        );
+      }
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Google sign-up cancelled or failed.')),
+        );
+      }
+    }
+  }
+
+  Future<_OrgInfo?> _showOrgInfoDialog() async {
+    final orgNameCtrl = TextEditingController(text: _orgNameCtrl.text);
+    final orgDescCtrl = TextEditingController(text: _orgDescCtrl.text);
+
+    final result = await showDialog<_OrgInfo>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Organization details'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: orgNameCtrl,
+                  decoration: const InputDecoration(labelText: 'Organization Name'),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: orgDescCtrl,
+                  maxLines: 3,
+                  decoration: const InputDecoration(labelText: 'Description (optional)'),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                if (orgNameCtrl.text.trim().isEmpty) return;
+                Navigator.pop(
+                  context,
+                  _OrgInfo(
+                    orgName: orgNameCtrl.text.trim(),
+                    orgDescription: orgDescCtrl.text.trim().isEmpty ? null : orgDescCtrl.text.trim(),
+                  ),
+                );
+              },
+              child: const Text('Continue'),
+            ),
+          ],
+        );
+      },
+    );
+
+    orgNameCtrl.dispose();
+    orgDescCtrl.dispose();
+    return result;
   }
 
   @override
@@ -152,6 +254,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
             child: const Text('Continue'),
           ),
         ),
+        const SizedBox(height: 12),
+        SizedBox(
+          width: double.infinity,
+          child: OutlinedButton.icon(
+            onPressed: _googleLoading ? null : _signUpWithGoogle,
+            icon: _googleLoading
+                ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                : Image.asset('assets/Google_logo.png', width: 18, height: 18),
+            label: Text(_googleLoading ? 'Connecting...' : 'Sign up with Google'),
+          ),
+        ),
         const SizedBox(height: 20),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -233,7 +346,29 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     padding: EdgeInsets.only(bottom: 40),
                     child: Icon(Icons.description_outlined))),
           ),
-        ],
+          const SizedBox(height: 16),
+          TextFormField(
+            controller: _inviteCodeCtrl,
+            decoration: const InputDecoration(
+                labelText: 'STK Davet Kodu', 
+                hintText: 'Örn: TOG-2026',
+                prefixIcon: Icon(Icons.vpn_key_outlined)),
+            validator: (v) {
+              if (_role == UserRole.organization) {
+                if (v == null || v.trim().isEmpty) {
+                  return 'Davet kodu zorunludur.';
+                }
+                // Geçerli kodların listesi
+                final validCodes = ['TOG-2026', 'CORBA-100', 'IKU-2026'];
+                if (!validCodes.contains(v.trim().toUpperCase())) {
+                  return 'Geçersiz davet kodu. Lütfen platform yönetimiyle iletişime geçin.';
+                }
+              }
+              return null;
+            },
+          ),
+        ], 
+        
         const SizedBox(height: 32),
         SizedBox(
           width: double.infinity,
@@ -245,10 +380,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 : const Text('Create Account'),
           ),
         ),
-      ],
+      ], 
     );
   }
-
   Widget _roleCard(UserRole role, String emoji, String label, String sub) {
     final sel = _role == role;
     return GestureDetector(
@@ -276,4 +410,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
       ),
     );
   }
+}
+
+class _OrgInfo {
+  final String orgName;
+  final String? orgDescription;
+
+  const _OrgInfo({required this.orgName, this.orgDescription});
 }
