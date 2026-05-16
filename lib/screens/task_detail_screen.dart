@@ -231,7 +231,7 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
           ),
         ],
       ),
-      bottomNavigationBar: isVolunteer && task.status == TaskStatus.open
+      bottomNavigationBar: isVolunteer && task.status == TaskStatus.open && user?.id != task.organizationId
           ? SafeArea(
               child: Padding(
                 padding: const EdgeInsets.all(16),

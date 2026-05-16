@@ -168,15 +168,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bgColor = isDark ? AppTheme.darkSurface : Colors.white;
+    final textColor = isDark ? AppTheme.darkText : AppTheme.textPrimary;
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: bgColor,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: bgColor,
+        iconTheme: IconThemeData(color: textColor),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => _step == 0 ? Navigator.pop(context) : setState(() => _step = 0),
         ),
-        title: Text('Step ${_step + 1} of 2'),
+        title: Text('Step ${_step + 1} of 2', style: TextStyle(color: textColor)),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(4),
           child: LinearProgressIndicator(

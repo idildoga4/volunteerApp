@@ -352,12 +352,13 @@ class SectionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
           title,
-          style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.textPrimary, letterSpacing: -0.2),
+          style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: isDark ? AppTheme.darkText : AppTheme.textPrimary, letterSpacing: -0.2),
         ),
         if (action != null)
           GestureDetector(
@@ -383,12 +384,12 @@ class EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Center(
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(40),
         child: Column(
           mainAxisSize: MainAxisSize.min,
-
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(emoji, style: const TextStyle(fontSize: 64)),
@@ -396,16 +397,16 @@ class EmptyState extends StatelessWidget {
             Text(
               title,
               textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppTheme.textPrimary),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: isDark ? AppTheme.darkText : AppTheme.textPrimary),
             ),
             const SizedBox(height: 8),
             Text(
               subtitle,
               textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 14, color: AppTheme.textSecondary, height: 1.5),
+              style: TextStyle(fontSize: 14, color: isDark ? AppTheme.darkSecondaryText : AppTheme.textSecondary, height: 1.5),
             ),
             if (buttonLabel != null) ...[
-              const SizedBox(height: 24), 
+              const SizedBox(height: 24),
               ElevatedButton(onPressed: onButton, child: Text(buttonLabel!))
             ],
           ],

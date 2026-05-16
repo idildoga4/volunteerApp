@@ -51,6 +51,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _save() async {
+    if (_nameCtrl.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Name cannot be empty')));
+      return;
+    }
     final user = db.currentUser!;
     await db.updateUser(
       user.copyWith(

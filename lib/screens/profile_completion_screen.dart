@@ -78,11 +78,18 @@ class _ProfileCompletionScreenState extends State<ProfileCompletionScreen> {
   Widget build(BuildContext context) {
     final isOrg = widget.user.role == UserRole.organization;
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardColor = isDark ? AppTheme.darkCard : Colors.white;
+    final bgColor = isDark ? AppTheme.darkSurface : AppTheme.surface;
+    final textColor = isDark ? AppTheme.darkText : AppTheme.textPrimary;
+    final subColor = isDark ? AppTheme.darkSecondaryText : AppTheme.textSecondary;
+
     return Scaffold(
-      backgroundColor: AppTheme.surface,
+      backgroundColor: bgColor,
       appBar: AppBar(
-        title: const Text('Complete Profile'),
-        backgroundColor: Colors.white,
+        title: Text('Complete Profile', style: TextStyle(color: textColor)),
+        backgroundColor: cardColor,
+        iconTheme: IconThemeData(color: textColor),
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -94,12 +101,12 @@ class _ProfileCompletionScreenState extends State<ProfileCompletionScreen> {
               children: [
                 Text(
                   isOrg ? 'Tell us about your organization' : 'Tell us about yourself',
-                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: AppTheme.textPrimary),
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: textColor),
                 ),
                 const SizedBox(height: 8),
-                const Text(
+                Text(
                   'You can update this anytime later.',
-                  style: TextStyle(fontSize: 13, color: AppTheme.textSecondary),
+                  style: TextStyle(fontSize: 13, color: subColor),
                 ),
                 const SizedBox(height: 24),
                 TextFormField(
@@ -136,9 +143,9 @@ class _ProfileCompletionScreenState extends State<ProfileCompletionScreen> {
                     ),
                   ),
                   const SizedBox(height: 20),
-                  const Text(
+                  Text(
                     'Your Skills',
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppTheme.textPrimary),
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: textColor),
                   ),
                   const SizedBox(height: 10),
                   Wrap(
@@ -152,7 +159,7 @@ class _ProfileCompletionScreenState extends State<ProfileCompletionScreen> {
                           duration: const Duration(milliseconds: 150),
                           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                           decoration: BoxDecoration(
-                            color: selected ? AppTheme.primary : Colors.white,
+                            color: selected ? AppTheme.primary : cardColor,
                             borderRadius: BorderRadius.circular(20),
                             border: Border.all(color: selected ? AppTheme.primary : AppTheme.divider),
                           ),
