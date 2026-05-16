@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'firebase_options.dart';
 import 'package:volunteer/screens/login_screen.dart';
@@ -31,10 +32,25 @@ class VolunteerApp extends StatefulWidget {
 class _VolunteerAppState extends State<VolunteerApp> {
   bool isDarkMode = false;
 
-  void toggleTheme(bool value) {
+  @override
+  void initState() {
+    super.initState();
+    _loadTheme();
+  }
+
+  Future<void> _loadTheme() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      isDarkMode = prefs.getBool('isDarkMode') ?? false;
+    });
+  }
+
+  void toggleTheme(bool value) async {
     setState(() {
       isDarkMode = value;
     });
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('isDarkMode', value);
   }
 
   @override

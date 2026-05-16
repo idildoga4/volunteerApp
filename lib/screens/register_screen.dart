@@ -242,7 +242,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
               onPressed: () => setState(() => _obscure = !_obscure),
             ),
           ),
-          validator: (v) => v == null || v.length < 4 ? 'Min 4 characters' : null,
+          validator: (v) {
+                    if (v == null || v.isEmpty) return 'Enter password';
+                    if (v.length < 8) return 'Password must be at least 8 characters';
+                    if (!RegExp(r'[A-Z]').hasMatch(v)) return 'Must contain an uppercase letter';
+                    if (!RegExp(r'[0-9]').hasMatch(v)) return 'Must contain a number';
+                    if (!RegExp(r'[!@#$%^&*(),.?":{}|<>]').hasMatch(v)) return 'Must contain a special character';
+                    return null;
+                  },
         ),
         const SizedBox(height: 28),
         SizedBox(

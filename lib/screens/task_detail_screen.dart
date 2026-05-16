@@ -72,7 +72,6 @@ class _TaskDetailScreenState extends State<TaskDetailScreen> {
                 ),
               ),
             ),
-            actions: [IconButton(icon: const Icon(Icons.share_outlined), onPressed: () {})],
           ),
 
           SliverToBoxAdapter(

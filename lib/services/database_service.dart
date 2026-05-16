@@ -243,7 +243,7 @@ class DatabaseService {
   }
 
   int getActiveNGOCount() {
-    return _users.where((u) => u.role == UserRole.organization).length;
+    return _tasks.map((t) => t.organizationId).toSet().length;
   }
 
   Future<AppUser?> register({
@@ -285,6 +285,7 @@ class DatabaseService {
     _tasks.clear();
     _applications.clear();
     _favoriteTaskIds.clear();
+    _initialized = false;
   }
 
   Future<bool> updateUser(AppUser updated) async {

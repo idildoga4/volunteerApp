@@ -3,7 +3,6 @@ import 'package:volunteer/widgets/theme.dart';
 import '../models/models.dart';
 import '../services/database_service.dart';
 
-
 class ApplyTaskScreen extends StatefulWidget {
   final Task task;
   const ApplyTaskScreen({super.key, required this.task});
@@ -19,13 +18,8 @@ class _ApplyTaskScreenState extends State<ApplyTaskScreen> {
   bool _loading = false;
 
   final List<String> _availabilityOptions = [
-    'Weekends',
-    'Weekdays',
-    'Mornings only',
-    'Afternoons only',
-    'Evenings only',
-    'Full-time',
-    'Flexible',
+    'Weekends', 'Weekdays', 'Mornings only',
+    'Afternoons only', 'Evenings only', 'Full-time', 'Flexible',
   ];
 
   @override
@@ -72,8 +66,7 @@ class _ApplyTaskScreenState extends State<ApplyTaskScreen> {
             const Text('🎉', style: TextStyle(fontSize: 64)),
             const SizedBox(height: 16),
             const Text('Application Submitted!',
-                style: TextStyle(
-                    fontSize: 22, fontWeight: FontWeight.w800, color: AppTheme.textPrimary)),
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: AppTheme.textPrimary)),
             const SizedBox(height: 8),
             Text(
               'Your application for "${widget.task.title}" has been sent. The organization will review it soon.',
@@ -83,8 +76,8 @@ class _ApplyTaskScreenState extends State<ApplyTaskScreen> {
             const SizedBox(height: 28),
             ElevatedButton(
               onPressed: () {
-                Navigator.pop(context); // close sheet
-                Navigator.pop(context); // go back to detail
+                Navigator.pop(context);
+                Navigator.pop(context);
               },
               style: ElevatedButton.styleFrom(minimumSize: const Size(double.infinity, 52)),
               child: const Text('Back to Task'),
@@ -97,15 +90,26 @@ class _ApplyTaskScreenState extends State<ApplyTaskScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardColor = isDark ? AppTheme.darkCard : Colors.white;
+    final bgColor = isDark ? AppTheme.darkSurface : AppTheme.surface;
+    final textColor = isDark ? AppTheme.darkText : AppTheme.textPrimary;
+    final subColor = isDark ? AppTheme.darkSecondaryText : AppTheme.textSecondary;
+
     final db = DatabaseService();
     final user = db.currentUser!;
     final matchedSkills = user.skills.where((s) => widget.task.requiredSkills.contains(s)).toList();
 
     return Scaffold(
-      backgroundColor: AppTheme.surface,
+      backgroundColor: bgColor,
       appBar: AppBar(
-        title: const Text('Apply for Task'),
-        backgroundColor: Colors.white,
+        title: Text('Apply for Task', style: TextStyle(color: textColor)),
+        backgroundColor: cardColor,
+        iconTheme: IconThemeData(color: textColor),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context),
+        ),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
           child: Container(height: 1, color: AppTheme.divider),
@@ -118,11 +122,10 @@ class _ApplyTaskScreenState extends State<ApplyTaskScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Task summary card
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: cardColor,
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(color: AppTheme.divider),
                 ),
@@ -135,20 +138,17 @@ class _ApplyTaskScreenState extends State<ApplyTaskScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(widget.task.title,
-                              style: const TextStyle(
-                                  fontSize: 15, fontWeight: FontWeight.w700,
-                                  color: AppTheme.textPrimary)),
+                              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: textColor)),
                           const SizedBox(height: 4),
                           Text(widget.task.organizationName,
-                              style: const TextStyle(
-                                  fontSize: 12, color: AppTheme.primary, fontWeight: FontWeight.w600)),
+                              style: const TextStyle(fontSize: 12, color: AppTheme.primary, fontWeight: FontWeight.w600)),
                           const SizedBox(height: 4),
                           Row(
                             children: [
                               const Icon(Icons.location_on_outlined, size: 12, color: AppTheme.textLight),
                               const SizedBox(width: 3),
                               Text(widget.task.location,
-                                  style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
+                                  style: TextStyle(fontSize: 12, color: subColor)),
                             ],
                           ),
                         ],
@@ -158,7 +158,6 @@ class _ApplyTaskScreenState extends State<ApplyTaskScreen> {
                 ),
               ),
 
-              // Skill match
               if (matchedSkills.isNotEmpty) ...[
                 const SizedBox(height: 16),
                 Container(
@@ -175,8 +174,7 @@ class _ApplyTaskScreenState extends State<ApplyTaskScreen> {
                       Expanded(
                         child: Text(
                           'Great match! Your skills ${matchedSkills.join(', ')} align with this task.',
-                          style: const TextStyle(
-                              fontSize: 13, color: AppTheme.success, fontWeight: FontWeight.w500),
+                          style: const TextStyle(fontSize: 13, color: AppTheme.success, fontWeight: FontWeight.w500),
                         ),
                       ),
                     ],
@@ -186,20 +184,17 @@ class _ApplyTaskScreenState extends State<ApplyTaskScreen> {
 
               const SizedBox(height: 24),
 
-              // Applicant info
-              const Text('Your Application',
-                  style: TextStyle(
-                      fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.textPrimary)),
+              Text('Your Application',
+                  style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: textColor)),
               const SizedBox(height: 4),
-              const Text('Tell the organization why you want to volunteer',
-                  style: TextStyle(fontSize: 13, color: AppTheme.textSecondary)),
+              Text('Tell the organization why you want to volunteer',
+                  style: TextStyle(fontSize: 13, color: subColor)),
               const SizedBox(height: 16),
 
-              // Applicant name (read only)
               Container(
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: AppTheme.surface,
+                  color: isDark ? AppTheme.darkSurface : AppTheme.surface,
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: AppTheme.divider),
                 ),
@@ -207,8 +202,7 @@ class _ApplyTaskScreenState extends State<ApplyTaskScreen> {
                   children: [
                     const Icon(Icons.person_outline, color: AppTheme.textLight, size: 20),
                     const SizedBox(width: 10),
-                    Text(user.name,
-                        style: const TextStyle(fontWeight: FontWeight.w600, color: AppTheme.textPrimary)),
+                    Text(user.name, style: TextStyle(fontWeight: FontWeight.w600, color: textColor)),
                     const Spacer(),
                     const Text('Auto-filled', style: TextStyle(fontSize: 11, color: AppTheme.textLight)),
                   ],
@@ -216,24 +210,21 @@ class _ApplyTaskScreenState extends State<ApplyTaskScreen> {
               ),
               const SizedBox(height: 16),
 
-              // Availability dropdown
-              const Text('Availability',
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.textPrimary)),
+              Text('Availability',
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: textColor)),
               const SizedBox(height: 8),
               DropdownButtonFormField<String>(
                 value: _availability,
-                decoration: const InputDecoration(
-                  prefixIcon: Icon(Icons.schedule_outlined),
-                ),
+                dropdownColor: cardColor,
+                decoration: const InputDecoration(prefixIcon: Icon(Icons.schedule_outlined)),
                 items: _availabilityOptions.map((opt) =>
                     DropdownMenuItem(value: opt, child: Text(opt))).toList(),
                 onChanged: (v) => setState(() => _availability = v!),
               ),
               const SizedBox(height: 16),
 
-              // Motivation message
-              const Text('Motivation Message',
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.textPrimary)),
+              Text('Motivation Message',
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: textColor)),
               const SizedBox(height: 8),
               TextFormField(
                 controller: _messageCtrl,
@@ -244,18 +235,15 @@ class _ApplyTaskScreenState extends State<ApplyTaskScreen> {
                   alignLabelWithHint: true,
                 ),
                 validator: (v) {
-                  if (v == null || v.trim().length < 20) {
-                    return 'Please write at least 20 characters';
-                  }
+                  if (v == null || v.trim().length < 20) return 'Please write at least 20 characters';
                   return null;
                 },
               ),
 
-              // Skills display
               if (user.skills.isNotEmpty) ...[
                 const SizedBox(height: 16),
-                const Text('Your Skills (will be shared)',
-                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.textPrimary)),
+                Text('Your Skills (will be shared)',
+                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: textColor)),
                 const SizedBox(height: 8),
                 Wrap(
                   spacing: 8, runSpacing: 8,
@@ -266,8 +254,7 @@ class _ApplyTaskScreenState extends State<ApplyTaskScreen> {
                       decoration: BoxDecoration(
                         color: isMatch ? AppTheme.successLight : AppTheme.primaryLight,
                         borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                            color: isMatch ? AppTheme.success.withOpacity(0.3) : AppTheme.divider),
+                        border: Border.all(color: isMatch ? AppTheme.success.withOpacity(0.3) : AppTheme.divider),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,

@@ -21,11 +21,13 @@ class _ApplicantsScreenState extends State<ApplicantsScreen> {
   Widget build(BuildContext context) {
     final apps = db.getApplicationsForTask(widget.task.id);
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: AppTheme.surface,
+      backgroundColor: isDark ? AppTheme.darkSurface : AppTheme.surface,
       appBar: AppBar(
         title: Text('${widget.task.title} — Applicants'),
-        backgroundColor: Colors.white,
+        backgroundColor: isDark ? AppTheme.darkCard : Colors.white,
       ),
       body: apps.isEmpty
           ? const EmptyState(
@@ -44,7 +46,7 @@ class _ApplicantsScreenState extends State<ApplicantsScreen> {
                 return Container(
                   margin: const EdgeInsets.only(bottom: 12),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: isDark ? AppTheme.darkCard : Colors.white,
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(color: AppTheme.divider),
                   ),
@@ -113,7 +115,7 @@ class _ApplicantsScreenState extends State<ApplicantsScreen> {
                         Container(
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: AppTheme.surface,
+                            color: isDark ? AppTheme.darkSurface : AppTheme.surface,
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Column(
@@ -125,7 +127,7 @@ class _ApplicantsScreenState extends State<ApplicantsScreen> {
                                       color: AppTheme.textLight)),
                               const SizedBox(height: 4),
                               Text(app.message,
-                                  style: const TextStyle(fontSize: 13, color: AppTheme.textPrimary, height: 1.4)),
+                                  style: TextStyle(fontSize: 13, color: isDark ? AppTheme.darkText : AppTheme.textPrimary, height: 1.4)),
                               const SizedBox(height: 8),
                               Row(
                                 children: [

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../main.dart';
 import '../services/database_service.dart';
 import '../widgets/theme.dart';
@@ -13,8 +14,26 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   final db = DatabaseService();
 
-  bool darkMode = false;
   bool notifications = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSettings();
+  }
+
+  Future<void> _loadSettings() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      notifications = prefs.getBool('notifications') ?? true;
+    });
+  }
+
+  Future<void> _saveNotifications(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('notifications', value);
+    setState(() => notifications = value);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -140,11 +159,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             child: SwitchListTile(
               value: notifications,
 
-              onChanged: (value) {
-                setState(() {
-                  notifications = value;
-                });
-              },
+              onChanged: _saveNotifications,
 
               secondary: const Icon(Icons.notifications_none),
 
@@ -169,7 +184,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
             onPressed: () async {
               await db.logout();
-
+              if (!mounted) return;
               Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
             },
 

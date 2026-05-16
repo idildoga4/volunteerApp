@@ -71,11 +71,21 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardColor = isDark ? AppTheme.darkCard : Colors.white;
+    final bgColor = isDark ? AppTheme.darkSurface : AppTheme.surface;
+    final textColor = isDark ? AppTheme.darkText : AppTheme.textPrimary;
+
     return Scaffold(
-      backgroundColor: AppTheme.surface,
+      backgroundColor: bgColor,
       appBar: AppBar(
-        title: const Text('Post New Task'),
-        backgroundColor: Colors.white,
+        title: Text('Post New Task', style: TextStyle(color: textColor)),
+        backgroundColor: cardColor,
+        iconTheme: IconThemeData(color: textColor),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context),
+        ),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
           child: Container(height: 1, color: AppTheme.divider),
@@ -89,7 +99,7 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Emoji picker
-              const Text('Task Icon', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.textPrimary)),
+              Text('Task Icon', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: textColor)),
               const SizedBox(height: 10),
               SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
@@ -103,10 +113,12 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
                         margin: const EdgeInsets.only(right: 10),
                         width: 52, height: 52,
                         decoration: BoxDecoration(
-                          color: sel ? AppTheme.primaryLight : Colors.white,
+                          color: sel ? AppTheme.primaryLight : cardColor,
                           borderRadius: BorderRadius.circular(14),
-                          border: Border.all(color: sel ? AppTheme.primary : AppTheme.divider,
-                              width: sel ? 2 : 1),
+                          border: Border.all(
+                            color: sel ? AppTheme.primary : AppTheme.divider,
+                            width: sel ? 2 : 1,
+                          ),
                         ),
                         child: Center(child: Text(e, style: const TextStyle(fontSize: 26))),
                       ),
@@ -116,18 +128,18 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
               ),
               const SizedBox(height: 20),
 
-              _label('Task Title'),
+              _label('Task Title', textColor),
               TextFormField(
                 controller: _titleCtrl,
-                decoration: const InputDecoration(
-                    hintText: 'e.g. Beach Clean-Up at Sarıyer'),
+                decoration: const InputDecoration(hintText: 'e.g. Beach Clean-Up at Sarıyer'),
                 validator: (v) => v == null || v.trim().length < 5 ? 'Min 5 characters' : null,
               ),
               const SizedBox(height: 16),
 
-              _label('Category'),
+              _label('Category', textColor),
               DropdownButtonFormField<String>(
                 value: _category,
+                dropdownColor: cardColor,
                 decoration: const InputDecoration(prefixIcon: Icon(Icons.category_outlined)),
                 items: AppConstants.categories.where((c) => c != 'All').map((c) =>
                     DropdownMenuItem(value: c, child: Text(c))).toList(),
@@ -138,7 +150,7 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
               ),
               const SizedBox(height: 16),
 
-              _label('Description'),
+              _label('Description', textColor),
               TextFormField(
                 controller: _descCtrl,
                 maxLines: 4,
@@ -148,7 +160,7 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
               ),
               const SizedBox(height: 16),
 
-              _label('Location'),
+              _label('Location', textColor),
               TextFormField(
                 controller: _locationCtrl,
                 decoration: const InputDecoration(
@@ -162,13 +174,13 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
                 Expanded(child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _label('Date'),
+                    _label('Date', textColor),
                     GestureDetector(
                       onTap: _pickDate,
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: cardColor,
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(color: AppTheme.divider),
                         ),
@@ -178,7 +190,7 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
                             const SizedBox(width: 8),
                             Text(
                               '${_date.day}/${_date.month}/${_date.year}',
-                              style: const TextStyle(fontSize: 14, color: AppTheme.textPrimary),
+                              style: TextStyle(fontSize: 14, color: textColor),
                             ),
                           ],
                         ),
@@ -190,7 +202,7 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
                 Expanded(child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _label('Duration'),
+                    _label('Duration', textColor),
                     TextFormField(
                       controller: _durationCtrl,
                       decoration: const InputDecoration(hintText: 'e.g. 4 hours'),
@@ -201,12 +213,11 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
               ]),
               const SizedBox(height: 16),
 
-              _label('Volunteer Spots Needed'),
+              _label('Volunteer Spots Needed', textColor),
               TextFormField(
                 controller: _spotsCtrl,
                 keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                    prefixIcon: Icon(Icons.people_outline)),
+                decoration: const InputDecoration(prefixIcon: Icon(Icons.people_outline)),
                 validator: (v) {
                   final n = int.tryParse(v ?? '');
                   if (n == null || n < 1) return 'Enter a valid number';
@@ -215,7 +226,7 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
               ),
               const SizedBox(height: 20),
 
-              _label('Required Skills (optional)'),
+              _label('Required Skills (optional)', textColor),
               const SizedBox(height: 8),
               Wrap(
                 spacing: 8, runSpacing: 8,
@@ -228,7 +239,7 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
                       duration: const Duration(milliseconds: 150),
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
-                        color: sel ? AppTheme.primary : Colors.white,
+                        color: sel ? AppTheme.primary : cardColor,
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(color: sel ? AppTheme.primary : AppTheme.divider),
                       ),
@@ -272,9 +283,8 @@ class _CreateTaskScreenState extends State<CreateTaskScreen> {
     if (picked != null) setState(() => _date = picked);
   }
 
-  Widget _label(String text) => Padding(
+  Widget _label(String text, Color color) => Padding(
     padding: const EdgeInsets.only(bottom: 8),
-    child: Text(text,
-        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppTheme.textPrimary)),
+    child: Text(text, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: color)),
   );
 }
