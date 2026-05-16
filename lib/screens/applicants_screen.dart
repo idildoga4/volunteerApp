@@ -56,7 +56,7 @@ class _ApplicantsScreenState extends State<ApplicantsScreen> {
                         Row(
                           children: [
                             CircleAvatar(
-                              radius: 22,
+                              radius: 21,
                               backgroundColor: AppTheme.primaryLight,
                               child: Text(
                                 volunteer.name[0].toUpperCase(),
