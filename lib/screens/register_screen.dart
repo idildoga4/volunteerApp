@@ -204,15 +204,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   Widget _buildStep0() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? AppTheme.darkText : AppTheme.textPrimary;
+    final subColor = isDark ? AppTheme.darkSecondaryText : AppTheme.textSecondary;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Create Account',
+        Text('Create Account',
             style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800,
-                color: AppTheme.textPrimary, letterSpacing: -0.5)),
+                color: textColor, letterSpacing: -0.5)),
         const SizedBox(height: 8),
-        const Text('Who are you joining as?',
-            style: TextStyle(fontSize: 15, color: AppTheme.textSecondary)),
+        Text('Who are you joining as?',
+            style: TextStyle(fontSize: 15, color: subColor)),
         const SizedBox(height: 28),
 
         // Role selector
@@ -281,8 +284,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Text('Already have an account?',
-                style: TextStyle(color: AppTheme.textSecondary)),
+            Text('Already have an account?',
+                style: TextStyle(color: subColor)),
             TextButton(
               onPressed: () => Navigator.pushReplacement(context,
                   MaterialPageRoute(builder: (_) => const LoginScreen())),
@@ -295,26 +298,30 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   Widget _buildStep1() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? AppTheme.darkText : AppTheme.textPrimary;
+    final subColor = isDark ? AppTheme.darkSecondaryText : AppTheme.textSecondary;
+    final chipBg = isDark ? AppTheme.darkCard : Colors.white;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           _role == UserRole.volunteer ? 'Your Skills' : 'Organization Details',
-          style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w800,
-              color: AppTheme.textPrimary, letterSpacing: -0.5),
+          style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800,
+              color: textColor, letterSpacing: -0.5),
         ),
         const SizedBox(height: 8),
         Text(
           _role == UserRole.volunteer
               ? 'Select skills to get matched with relevant tasks.'
               : 'Tell volunteers about your organization.',
-          style: const TextStyle(fontSize: 15, color: AppTheme.textSecondary),
+          style: TextStyle(fontSize: 15, color: subColor),
         ),
         const SizedBox(height: 28),
 
         if (_role == UserRole.volunteer) ...[
-          const Text('Select your skills:',
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.textPrimary)),
+          Text('Select your skills:',
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: textColor)),
           const SizedBox(height: 12),
           Wrap(
             spacing: 8, runSpacing: 8,
@@ -326,14 +333,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   duration: const Duration(milliseconds: 200),
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                   decoration: BoxDecoration(
-                    color: sel ? AppTheme.primary : Colors.white,
+                    color: sel ? AppTheme.primary : chipBg,
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(color: sel ? AppTheme.primary : AppTheme.divider),
                   ),
                   child: Text(s,
                       style: TextStyle(
                         fontSize: 13, fontWeight: FontWeight.w600,
-                        color: sel ? Colors.white : AppTheme.textSecondary,
+                        color: sel ? Colors.white : subColor,
                       )),
                 ),
               );
@@ -397,13 +404,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
   Widget _roleCard(UserRole role, String emoji, String label, String sub) {
     final sel = _role == role;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final unselectedBg = isDark ? AppTheme.darkCard : Colors.white;
     return GestureDetector(
       onTap: () => setState(() => _role = role),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: sel ? AppTheme.primaryLight : Colors.white,
+          color: sel ? AppTheme.primaryLight : unselectedBg,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: sel ? AppTheme.primary : AppTheme.divider, width: sel ? 2 : 1),
         ),

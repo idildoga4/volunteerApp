@@ -230,6 +230,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildEditForm(bool isOrg, AppUser user) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? AppTheme.darkText : AppTheme.textPrimary;
+    final subColor = isDark ? AppTheme.darkSecondaryText : AppTheme.textSecondary;
+    final chipBg = isDark ? AppTheme.darkCard : Colors.white;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -245,9 +249,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
             decoration: const InputDecoration(labelText: 'Bio (optional)', prefixIcon: Icon(Icons.notes_outlined)),
           ),
           const SizedBox(height: 20),
-          const Text(
+          Text(
             'My Skills',
-            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.textPrimary),
+            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: textColor),
           ),
           const SizedBox(height: 10),
           Wrap(
@@ -261,13 +265,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   duration: const Duration(milliseconds: 150),
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: sel ? AppTheme.primary : Colors.white,
+                    color: sel ? AppTheme.primary : chipBg,
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(color: sel ? AppTheme.primary : AppTheme.divider),
                   ),
                   child: Text(
                     s,
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: sel ? Colors.white : AppTheme.textSecondary),
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: sel ? Colors.white : subColor),
                   ),
                 ),
               );
